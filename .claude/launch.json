@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rtld-app",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "expo", "start", "--web", "--port", "3456"],
+      "port": 3456
+    },
+    {
+      "name": "rtld-static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server/serve.js"],
+      "cwd": "/Users/guillermobale/Desktop/game-prototype-april",
+      "env": { "PORT": "3457" },
+      "port": 3457
+    }
+  ]
+}

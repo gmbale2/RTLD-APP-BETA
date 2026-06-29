@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "The Brain Hunter"
+version = "1.0.0"
+id = "artifacts/brain-hunter"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+localPort = 25093
+name = "expo"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/brain-hunter run dev"
+
+[services.env]
+PORT = "25093"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/brain-hunter", "run", "build"]
+run = ["pnpm", "--filter", "@workspace/brain-hunter", "run", "serve"]
