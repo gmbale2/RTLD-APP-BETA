@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Audio } from "expo-av";
 
-const MENU_SRC        = require("../assets/sounds/party_time.m4a");
 const AMBIENT_SRC     = require("../assets/sounds/ambient.wav");
 const POWER_THEME_SRC = require("../assets/sounds/power_theme.wav");
 const BRAINS_SRC      = require("../assets/sounds/brains_sfx.m4a");
@@ -11,7 +10,6 @@ type SoundName = "ambient" | "brain" | "death" | "power";
 type MusicMode = "menu" | "gameplay" | "power";
 
 export function useSoundPlayer() {
-  const menuRef        = useRef<Audio.Sound | null>(null);
   const ambientRef     = useRef<Audio.Sound | null>(null);
   const powerThemeRef  = useRef<Audio.Sound | null>(null);
   const brainsRef      = useRef<Audio.Sound | null>(null);
@@ -29,14 +27,6 @@ export function useSoundPlayer() {
           staysActiveInBackground: false,
         });
       } catch {}
-
-      try {
-        const { sound: menu } = await Audio.Sound.createAsync(
-          MENU_SRC, { shouldPlay: false, volume: 0.55 }
-        );
-        await menu.setIsLoopingAsync(true);
-        if (mounted) menuRef.current = menu;
-      } catch (e) { console.warn("menu theme:", e); }
 
       try {
         const { sound: ambient } = await Audio.Sound.createAsync(
@@ -73,7 +63,7 @@ export function useSoundPlayer() {
 
     return () => {
       mounted = false;
-      [menuRef, ambientRef, powerThemeRef, brainsRef, paramedicsRef].forEach((r) => {
+      [ambientRef, powerThemeRef, brainsRef, paramedicsRef].forEach((r) => {
         const s = r.current;
         r.current = null;
         s?.stopAsync().then(() => s.unloadAsync()).catch(() => {});
@@ -81,12 +71,11 @@ export function useSoundPlayer() {
     };
   }, []);
 
-  // First touch — enable audio and start menu theme
+  // First touch — enable audio (menu screen is silent, gameplay starts on mode change)
   const enableAudio = useCallback(() => {
     if (enabledRef.current) return;
     enabledRef.current = true;
     currentModeRef.current = "menu";
-    menuRef.current?.playAsync().catch(() => {});
   }, []);
 
   const setMode = useCallback((mode: MusicMode) => {
@@ -99,15 +88,13 @@ export function useSoundPlayer() {
       powerThemeRef.current?.stopAsync().then(() =>
         powerThemeRef.current?.setPositionAsync(0)
       ).catch(() => {});
-      menuRef.current?.playAsync().catch(() => {});
+      // menu screen is silent — party_time.m4a removed (no clearance)
     } else if (mode === "gameplay") {
-      menuRef.current?.pauseAsync().catch(() => {});
       powerThemeRef.current?.stopAsync().then(() =>
         powerThemeRef.current?.setPositionAsync(0)
       ).catch(() => {});
       ambientRef.current?.playAsync().catch(() => {});
     } else if (mode === "power") {
-      menuRef.current?.pauseAsync().catch(() => {});
       ambientRef.current?.pauseAsync().catch(() => {});
       powerThemeRef.current?.setPositionAsync(0).then(() =>
         powerThemeRef.current?.playAsync()
@@ -130,26 +117,21 @@ export function useSoundPlayer() {
     }
   }, []);
 
-  // Pauses whichever music track is active without changing the tracked mode,
-  // so resumeMusic() can restart the correct track later.
   const pauseMusic = useCallback(() => {
     if (!enabledRef.current) return;
-    menuRef.current?.pauseAsync().catch(() => {});
     ambientRef.current?.pauseAsync().catch(() => {});
     powerThemeRef.current?.pauseAsync().catch(() => {});
   }, []);
 
-  // Restarts the track that was playing before pauseMusic() was called.
   const resumeMusic = useCallback(() => {
     if (!enabledRef.current) return;
     const mode = currentModeRef.current;
-    if (mode === "menu") {
-      menuRef.current?.playAsync().catch(() => {});
-    } else if (mode === "gameplay") {
+    if (mode === "gameplay") {
       ambientRef.current?.playAsync().catch(() => {});
     } else if (mode === "power") {
       powerThemeRef.current?.playAsync().catch(() => {});
     }
+    // "menu" mode is silent
   }, []);
 
   return { playSound, enableAudio, setMode, pauseMusic, resumeMusic };

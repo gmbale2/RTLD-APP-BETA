@@ -23,6 +23,9 @@ importers:
 
   .:
     dependencies:
+      '@expo-google-fonts/boogaloo':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@supabase/supabase-js':
         specifier: ^2.108.1
         version: 2.108.1
@@ -694,6 +697,9 @@ packages:
   '@egjs/hammerjs@2.0.17':
     resolution: {integrity: sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A==}
     engines: {node: '>=0.8.0'}
+
+  '@expo-google-fonts/boogaloo@0.4.1':
+    resolution: {integrity: sha512-nu60bACF32tFKLVRwIL1g1yh9UaZ0T+sFNHubJC+FcQu0E1jkNK3b6gjoDzQludsSzLKgLF84IdWb9XdzQN9Gw==}
 
   '@expo-google-fonts/inter@0.4.2':
     resolution: {integrity: sha512-syfiImMaDmq7cFi0of+waE2M4uSCyd16zgyWxdPOY7fN2VBmSLKEzkfbZgeOjJq61kSqPBNNtXjggiQiSD6gMQ==}
@@ -4549,6 +4555,8 @@ snapshots:
   '@egjs/hammerjs@2.0.17':
     dependencies:
       '@types/hammerjs': 2.0.46
+
+  '@expo-google-fonts/boogaloo@0.4.1': {}
 
   '@expo-google-fonts/inter@0.4.2': {}
 

@@ -3,6 +3,7 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import { Boogaloo_400Regular } from "@expo-google-fonts/boogaloo";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -35,6 +36,10 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_700Bold,
+    Boogaloo_400Regular,
+    // Swap Boogaloo_400Regular for Gagalin_400Regular once you place
+    // assets/fonts/Gagalin-Regular.ttf in the project and load it via
+    // useFonts({ Gagalin_400Regular: require("../assets/fonts/Gagalin-Regular.ttf") })
     ...FontAwesome5.font,
   });
 
