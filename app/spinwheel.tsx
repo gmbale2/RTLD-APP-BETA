@@ -151,8 +151,12 @@ export default function SpinWheelScreen() {
 
   // ── CMS segments (fetched from Supabase, falls back to defaults) ──────────
   const [segments, setSegments] = useState<WheelSegment[]>(DEFAULT_WHEEL_SEGMENTS);
+  const segmentsRef = useRef<WheelSegment[]>(DEFAULT_WHEEL_SEGMENTS);
   useEffect(() => {
-    fetchWheelSegments().then(segs => setSegments(segs));
+    fetchWheelSegments().then(segs => {
+      setSegments(segs);
+      segmentsRef.current = segs;
+    });
   }, []);
 
   // Global font size — computed after segments are declared
@@ -191,7 +195,7 @@ export default function SpinWheelScreen() {
   // ── Spin ───────────────────────────────────────────────────────────────────
   const spinWheel = useCallback(() => {
     if (phaseRef.current !== "idle") return;
-    const result = pickWinner(segments);
+    const result = pickWinner(segmentsRef.current);
     winnerRef.current = result;
     setWinner(result);
     setPhaseSync("spinning");
