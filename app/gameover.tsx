@@ -276,12 +276,13 @@ function ShareButtons({ shareText, cardRef }: ShareButtonsProps) {
 
 export default function GameOverScreen() {
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ score: string; level: string; doubled?: string; wheelPrize?: string }>();
+  const params = useLocalSearchParams<{ score: string; level: string; doubled?: string; wheelPrize?: string; offlineWheel?: string }>();
 
-  const score      = parseInt(params.score ?? "0", 10);
-  const level      = parseInt(params.level ?? "1", 10);
-  const doubled    = params.doubled === "true";
-  const wheelPrize = params.wheelPrize ?? "";
+  const score         = parseInt(params.score ?? "0", 10);
+  const level         = parseInt(params.level ?? "1", 10);
+  const doubled       = params.doubled === "true";
+  const wheelPrize    = params.wheelPrize ?? "";
+  const offlineWheel  = params.offlineWheel === "true";
 
   const [username, setUsername] = useState<string>("player");
   const [result, setResult]     = useState<LeaderboardResult | null>(null);
@@ -323,6 +324,11 @@ export default function GameOverScreen() {
           <Text style={styles.wheelPrizeBadgeText}>🎰 WHEEL PRIZE: {wheelPrize}</Text>
         </View>
       ) : null}
+      {offlineWheel && (
+        <View style={styles.offlineWheelBadge}>
+          <Text style={styles.offlineWheelText}>📵 YOU EARNED THE WHEEL — RECONNECT TO SPIN</Text>
+        </View>
+      )}
 
       {/* ── Share Card ─────────────────────────────────────────────────── */}
       <ShareCard
@@ -667,6 +673,22 @@ const styles = StyleSheet.create({
   wheelPrizeBadgeText: {
     fontSize: 10,
     color: "#ff9944",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 1.5,
+  },
+
+  offlineWheelBadge: {
+    backgroundColor: "rgba(30,0,0,0.9)",
+    borderWidth: 1,
+    borderColor: "#ff4444",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    marginBottom: 8,
+  },
+  offlineWheelText: {
+    fontSize: 9,
+    color: "#ff6666",
     fontFamily: "Inter_700Bold",
     letterSpacing: 1.5,
   },

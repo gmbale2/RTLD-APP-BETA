@@ -25,6 +25,7 @@ import { CemeteryBorder } from "@/components/game/CemeteryBorder";
 import { GameHUD } from "@/components/game/GameHUD";
 import { GameOverlay } from "@/components/game/GameOverlay";
 import { useSoundPlayer } from "@/hooks/useSoundPlayer";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { getUser } from "@/utils/userStorage";
 import { fetchCmsConfig, DEFAULT_SPIN_THRESHOLD } from "@/utils/cmsConfig";
 
@@ -84,6 +85,18 @@ export default function GameScreen() {
 
   const { playSound, enableAudio, setMode, pauseMusic, resumeMusic } = useSoundPlayer();
   const prevPhaseRef = useRef<string | null>(null);
+  const isOnline = useOnlineStatus();
+
+  // Pause the game loop (reuses the nav-pause mechanism)
+  const handleOfflinePause = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    pauseMusic();
+    navPausedRef.current = true;
+    setNavPaused(true);
+  }, [pauseMusic]);
 
   const handleDirection = useCallback((dx: number, dy: number) => {
     engineRef.current?.setDirection(dx, dy);
@@ -243,8 +256,8 @@ export default function GameScreen() {
       const finalState = engineRef.current?.getState();
       const finalScore = finalState?.score ?? gameState.score;
       const finalLevel = finalState?.level ?? gameState.level;
-      if (finalScore >= spinThresholdRef.current) {
-        // Player earned the wheel — show it before the leaderboard
+      const online = Platform.OS !== "web" || navigator.onLine;
+      if (finalScore >= spinThresholdRef.current && online) {
         router.push({
           pathname: "/spinwheel",
           params: { score: String(finalScore), level: String(finalLevel) },
@@ -252,7 +265,13 @@ export default function GameScreen() {
       } else {
         router.push({
           pathname: "/gameover",
-          params: { score: String(finalScore), level: String(finalLevel) },
+          params: {
+            score: String(finalScore),
+            level: String(finalLevel),
+            ...(finalScore >= spinThresholdRef.current && !online
+              ? { offlineWheel: "true" }
+              : {}),
+          },
         });
       }
     }, 1800);
@@ -395,6 +414,21 @@ export default function GameScreen() {
         areaHeight={logoAreaHeight}
         onHubPress={() => router.push("/hub")}
       />
+
+      {/* ── Offline banner ─────────────────────────────────────────────── */}
+      {!isOnline && !navPaused && (
+        <View style={styles.offlineBanner} pointerEvents="box-none">
+          <View style={styles.offlineBannerInner}>
+            <FontAwesome5 name="wifi" size={11} color="#ff4444" />
+            <Text style={styles.offlineText}>NO CONNECTION — SCORE WON'T SAVE</Text>
+            {gameState.phase === "playing" && (
+              <Pressable style={styles.offlinePauseBtn} onPress={handleOfflinePause}>
+                <Text style={styles.offlinePauseBtnText}>PAUSE</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -546,5 +580,44 @@ const styles = StyleSheet.create({
     color: "#0a0012",
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
+  },
+  offlineBanner: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 99,
+  },
+  offlineBannerInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(0,0,0,0.88)",
+    borderBottomWidth: 1.5,
+    borderColor: "#ff4444",
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    width: "100%",
+    justifyContent: "center",
+  },
+  offlineText: {
+    fontSize: 9,
+    color: "#ff4444",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 1.5,
+  },
+  offlinePauseBtn: {
+    backgroundColor: "#ff4444",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginLeft: 6,
+  },
+  offlinePauseBtnText: {
+    fontSize: 9,
+    color: "#ffffff",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 1.5,
   },
 });
