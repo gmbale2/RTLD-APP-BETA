@@ -17,7 +17,25 @@ const BORDER_COLOR = "#ffffff";
 const SPR_TARMAN        = require("../../assets/sprites/tarman.png");
 const SPR_PUNK_GREEN    = require("../../assets/sprites/punk_green.png");
 const SPR_PUNK_BLUE     = require("../../assets/sprites/punk_blue.png");
-const SPR_PUNK_SCARED   = require("../../assets/sprites/punk_scared.png");
+// Ghost (white silhouette) variants — one per sprite, used during blink frames
+const SPR_GHOST_GREEN        = require("../../assets/sprites/ghost_green.png");
+const SPR_GHOST_BLUE         = require("../../assets/sprites/ghost_blue.png");
+const SPR_GHOST_ORANGE_L     = require("../../assets/sprites/ghost_orange_l.png");
+const SPR_GHOST_ORANGE_R     = require("../../assets/sprites/ghost_orange_r.png");
+const SPR_GHOST_BLUE2_L      = require("../../assets/sprites/ghost_blue2_l.png");
+const SPR_GHOST_BLUE2_R      = require("../../assets/sprites/ghost_blue2_r.png");
+const SPR_GHOST_GREEN2_L     = require("../../assets/sprites/ghost_green2_l.png");
+const SPR_GHOST_GREEN2_R     = require("../../assets/sprites/ghost_green2_r.png");
+const SPR_GHOST_ZOMBIE_L     = require("../../assets/sprites/ghost_zombie_l.png");
+const SPR_GHOST_ZOMBIE_R     = require("../../assets/sprites/ghost_zombie_r.png");
+const SPR_GHOST_SKULL_GREEN_L = require("../../assets/sprites/ghost_skull_green_l.png");
+const SPR_GHOST_SKULL_GREEN_R = require("../../assets/sprites/ghost_skull_green_r.png");
+const SPR_GHOST_GIRL_GREEN_L = require("../../assets/sprites/ghost_girl_green_l.png");
+const SPR_GHOST_GIRL_GREEN_R = require("../../assets/sprites/ghost_girl_green_r.png");
+const SPR_GHOST_DOG_ZOMBIE_L = require("../../assets/sprites/ghost_dog_zombie_l.png");
+const SPR_GHOST_DOG_ZOMBIE_R = require("../../assets/sprites/ghost_dog_zombie_r.png");
+const SPR_GHOST_RED_L        = require("../../assets/sprites/ghost_ghost_red_l.png");
+const SPR_GHOST_RED_R        = require("../../assets/sprites/ghost_ghost_red_r.png");
 const SPR_PUNK_ORANGE_L      = require("../../assets/sprites/punk_orange_l.png");
 const SPR_PUNK_ORANGE_R      = require("../../assets/sprites/punk_orange_r.png");
 const SPR_PUNK_BLUE2_L       = require("../../assets/sprites/punk_blue2_l.png");
@@ -43,20 +61,20 @@ const SPR_FLOOR         = require("../../assets/sprites/floor_dark.png");
 // useFlip=true  → single image + CSS mirror for east-facing (original sprites)
 // useFlip=false → explicit _l/_r sources; NOTE: designer convention is reversed:
 //                 _r.png faces LEFT (use as leftSrc), _l.png faces RIGHT (use as rightSrc)
-type PunkSkin = { leftSrc: any; rightSrc: any; useFlip: boolean };
+type PunkSkin = { leftSrc: any; rightSrc: any; useFlip: boolean; ghostLeftSrc: any; ghostRightSrc: any };
 
 // ── Shorthand skin entries for all 10 characters ─────────────────────────────
 // A–B: original sprites (CSS flip)    C–J: directional sprites (explicit L/R)
-const skA = { leftSrc: SPR_PUNK_GREEN,        rightSrc: SPR_PUNK_GREEN,        useFlip: true  };
-const skB = { leftSrc: SPR_PUNK_BLUE,         rightSrc: SPR_PUNK_BLUE,         useFlip: true  };
-const skC = { leftSrc: SPR_PUNK_ORANGE_R,     rightSrc: SPR_PUNK_ORANGE_L,     useFlip: false }; // orange
-const skD = { leftSrc: SPR_PUNK_BLUE2_R,      rightSrc: SPR_PUNK_BLUE2_L,      useFlip: false }; // blue mohawk v2
-const skE = { leftSrc: SPR_PUNK_GREEN2_R,     rightSrc: SPR_PUNK_GREEN2_L,     useFlip: false }; // green mohawk v2
-const skF = { leftSrc: SPR_PUNK_ZOMBIE_R,     rightSrc: SPR_PUNK_ZOMBIE_L,     useFlip: false }; // skeleton zombie
-const skG = { leftSrc: SPR_PUNK_SKULL_GREEN_R, rightSrc: SPR_PUNK_SKULL_GREEN_L, useFlip: false }; // green skull
-const skH = { leftSrc: SPR_PUNK_GIRL_GREEN_R, rightSrc: SPR_PUNK_GIRL_GREEN_L, useFlip: false }; // zombie girl
-const skI = { leftSrc: SPR_PUNK_DOG_ZOMBIE_R, rightSrc: SPR_PUNK_DOG_ZOMBIE_L, useFlip: false }; // zombie dog
-const skJ = { leftSrc: SPR_PUNK_GHOST_RED_R,  rightSrc: SPR_PUNK_GHOST_RED_L,  useFlip: false }; // red ghost
+const skA = { leftSrc: SPR_PUNK_GREEN,        rightSrc: SPR_PUNK_GREEN,        useFlip: true,  ghostLeftSrc: SPR_GHOST_GREEN,         ghostRightSrc: SPR_GHOST_GREEN         };
+const skB = { leftSrc: SPR_PUNK_BLUE,         rightSrc: SPR_PUNK_BLUE,         useFlip: true,  ghostLeftSrc: SPR_GHOST_BLUE,          ghostRightSrc: SPR_GHOST_BLUE          };
+const skC = { leftSrc: SPR_PUNK_ORANGE_R,     rightSrc: SPR_PUNK_ORANGE_L,     useFlip: false, ghostLeftSrc: SPR_GHOST_ORANGE_R,      ghostRightSrc: SPR_GHOST_ORANGE_L      }; // orange
+const skD = { leftSrc: SPR_PUNK_BLUE2_R,      rightSrc: SPR_PUNK_BLUE2_L,      useFlip: false, ghostLeftSrc: SPR_GHOST_BLUE2_R,       ghostRightSrc: SPR_GHOST_BLUE2_L       }; // blue mohawk v2
+const skE = { leftSrc: SPR_PUNK_GREEN2_R,     rightSrc: SPR_PUNK_GREEN2_L,     useFlip: false, ghostLeftSrc: SPR_GHOST_GREEN2_R,      ghostRightSrc: SPR_GHOST_GREEN2_L      }; // green mohawk v2
+const skF = { leftSrc: SPR_PUNK_ZOMBIE_R,     rightSrc: SPR_PUNK_ZOMBIE_L,     useFlip: false, ghostLeftSrc: SPR_GHOST_ZOMBIE_R,      ghostRightSrc: SPR_GHOST_ZOMBIE_L      }; // skeleton zombie
+const skG = { leftSrc: SPR_PUNK_SKULL_GREEN_R, rightSrc: SPR_PUNK_SKULL_GREEN_L, useFlip: false, ghostLeftSrc: SPR_GHOST_SKULL_GREEN_R, ghostRightSrc: SPR_GHOST_SKULL_GREEN_L }; // green skull
+const skH = { leftSrc: SPR_PUNK_GIRL_GREEN_R, rightSrc: SPR_PUNK_GIRL_GREEN_L, useFlip: false, ghostLeftSrc: SPR_GHOST_GIRL_GREEN_R,  ghostRightSrc: SPR_GHOST_GIRL_GREEN_L  }; // zombie girl
+const skI = { leftSrc: SPR_PUNK_DOG_ZOMBIE_R, rightSrc: SPR_PUNK_DOG_ZOMBIE_L, useFlip: false, ghostLeftSrc: SPR_GHOST_DOG_ZOMBIE_R,  ghostRightSrc: SPR_GHOST_DOG_ZOMBIE_L  }; // zombie dog
+const skJ = { leftSrc: SPR_PUNK_GHOST_RED_R,  rightSrc: SPR_PUNK_GHOST_RED_L,  useFlip: false, ghostLeftSrc: SPR_GHOST_RED_R,         ghostRightSrc: SPR_GHOST_RED_L         }; // red ghost
 
 // ── 10 sets, every level — blue2/green2 held until the very end ──────────────
 // Sets 0-7 use only A,B,C,F,G,H,I,J (no blue2/green2).
@@ -638,34 +656,34 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             const flashFrame = powered ? Math.floor(powerTimer / 6) % 2 === 0 : false;
             const isScaredSprite = powered && !flashFrame;
 
-            // ── Scared: use each character's own sprite with blue ghost wash ──
+            // ── Scared: blink between normal sprite and per-character white ghost ──
             if (isScaredSprite) {
-              let scaredHref: any;
-              let scaredFlip: string | undefined;
+              let ghostHref: any;
+              let ghostFlip: string | undefined;
               if (skin.useFlip) {
-                scaredHref = skin.leftSrc;
-                scaredFlip = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
+                ghostHref = skin.ghostLeftSrc;
+                ghostFlip = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
               } else {
-                scaredHref = hDir > 0 ? skin.rightSrc : skin.leftSrc;
-                scaredFlip = undefined;
+                ghostHref = hDir > 0 ? skin.ghostRightSrc : skin.ghostLeftSrc;
+                ghostFlip = undefined;
               }
               return (
-                <G key={`punk-${i}`} transform={scaredFlip} opacity={0.55}>
+                <G key={`punk-${i}`} transform={ghostFlip}>
                   <Circle
                     cx={punk.pixelX}
                     cy={punk.pixelY}
-                    r={ts * 0.9}
-                    fill="rgba(50,100,255,0.35)"
+                    r={ts * 0.75}
+                    fill="rgba(80,120,255,0.15)"
                     stroke="#4466ff"
-                    strokeWidth={1.5}
-                    opacity={0.85}
+                    strokeWidth={1}
+                    opacity={0.6}
                   />
                   <SvgImage
                     x={punk.pixelX - pw / 2}
                     y={punk.pixelY - ph * 0.7}
                     width={pw}
                     height={ph}
-                    href={scaredHref}
+                    href={ghostHref}
                     preserveAspectRatio="xMidYMid meet"
                   />
                 </G>
