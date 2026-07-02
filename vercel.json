@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm exec expo export -p web --output-dir dist && node scripts/fix-assets.js",
+  "outputDirectory": "dist",
+  "installCommand": "pnpm install",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
