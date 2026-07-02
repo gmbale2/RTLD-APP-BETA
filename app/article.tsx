@@ -25,7 +25,9 @@ const ARTICLE_CSS = `
   h1, h2, h3 { color: #39ff14; font-weight: 700; margin-top: 24px; }
   p  { margin: 12px 0; }
   a  { color: #39ff14; }
-  img { max-width: 100%; border-radius: 8px; margin: 12px 0; }
+  img { max-width: 100% !important; width: auto !important; height: auto !important; display: block; border-radius: 8px; margin: 12px 0; }
+  figure { margin: 12px 0; max-width: 100%; }
+  figure img { max-width: 100% !important; }
   blockquote {
     border-left: 3px solid #39ff14;
     margin: 16px 0; padding: 8px 16px;
@@ -82,19 +84,16 @@ export default function ArticleScreen() {
       <View style={styles.divider} />
 
       {Platform.OS === "web" ? (
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-          {/* @ts-expect-error — dangerouslySetInnerHTML is web-only */}
-          <div
-            dangerouslySetInnerHTML={{ __html: article.contentHtml }}
-            style={{
-              color: "#ccffcc",
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-              fontSize: 15,
-              lineHeight: "1.7",
-              paddingBottom: 32,
-            }}
-          />
-        </ScrollView>
+        // @ts-expect-error — iframe is web-only
+        <iframe
+          srcDoc={htmlPage}
+          style={{
+            flex: 1,
+            border: "none",
+            width: "100%",
+            backgroundColor: "#050005",
+          }}
+        />
       ) : (
         (() => {
           const { WebView } = require("react-native-webview");
