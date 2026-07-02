@@ -178,7 +178,7 @@ export default function RegisterScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>EMAIL</Text>
             <Text style={styles.hint}>
-              Used for daily draw notifications. Never shared.
+              Used for draw notifications. Never shared.
             </Text>
             <TextInput
               style={[styles.input, emailErr ? styles.inputError : null]}
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
 
   hint: {
     fontSize: 10,
-    color: "#664477",
+    color: "#aa88cc",
     fontFamily: "Inter_400Regular",
     marginBottom: 6,
   },
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   consentText: {
     flex: 1,
     fontSize: 10,
-    color: "#664477",
+    color: "#aa88cc",
     fontFamily: "Inter_400Regular",
     lineHeight: 15,
   },
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   legal: {
     marginTop: 20,
     fontSize: 9,
-    color: "#443355",
+    color: "#9977bb",
     fontFamily: "Inter_400Regular",
     textAlign: "center",
     lineHeight: 14,
