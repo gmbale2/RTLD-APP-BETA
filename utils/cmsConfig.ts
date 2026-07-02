@@ -31,6 +31,7 @@ export interface ActivePrize {
   description:  string;
   period_start: string;
   period_end:   string;
+  image_url:    string | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -146,7 +147,7 @@ export async function fetchActivePrize(): Promise<ActivePrize | null> {
     const now = new Date().toISOString();
     const { data, error } = await supabase
       .from("prizes")
-      .select("id, title, description, period_start, period_end")
+      .select("id, title, description, period_start, period_end, image_url")
       .eq("enabled", true)
       .lte("period_start", now)
       .gt("period_end", now)
@@ -161,6 +162,7 @@ export async function fetchActivePrize(): Promise<ActivePrize | null> {
       description:  data.description,
       period_start: data.period_start,
       period_end:   data.period_end,
+      image_url:    data.image_url ?? null,
     };
   } catch {
     return null;

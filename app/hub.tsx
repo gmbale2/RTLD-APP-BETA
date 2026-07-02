@@ -18,6 +18,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { fetchCollectionProducts } from "@/utils/shopify";
+import { fetchActivePrize } from "@/utils/cmsConfig";
 
 const RTLD_LOGO = require("../assets/images/rtld_logo_cropped.png");
 
@@ -91,10 +92,14 @@ const SECTIONS = [
 export default function HubScreen() {
   const insets = useSafeAreaInsets();
   const [filmThumb, setFilmThumb] = useState<string | null>(null);
+  const [prizeThumb, setPrizeThumb] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCollectionProducts("new-movie-opportunities", 1).then((products) => {
       if (products[0]?.imageUrl) setFilmThumb(products[0].imageUrl);
+    });
+    fetchActivePrize().then((prize) => {
+      if (prize?.image_url) setPrizeThumb(prize.image_url);
     });
   }, []);
 
@@ -132,7 +137,11 @@ export default function HubScreen() {
             onPress={() => router.replace(s.route)}
           >
             <ExpoImage
-              source={s.key === "filmopps" && filmThumb ? { uri: filmThumb } : s.image}
+              source={
+                s.key === "filmopps" && filmThumb ? { uri: filmThumb } :
+                s.key === "ranking"  && prizeThumb ? { uri: prizeThumb } :
+                s.image
+              }
               contentFit="cover"
               contentPosition={s.contentPosition}
               style={StyleSheet.absoluteFillObject}
