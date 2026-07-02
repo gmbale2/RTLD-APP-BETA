@@ -86,8 +86,17 @@ export async function submitScore(score: number, level: number): Promise<void> {
   const user = await getUser();
   if (!user) return;
 
+  // Always use the live auth session uid so the RLS policy is satisfied
+  // even if the cached user.id drifted from the current session.
+  const { data: { session } } = await supabase.auth.getSession();
+  const authUid = session?.user?.id;
+  if (!authUid) {
+    console.warn("[leaderboard] submitScore: no active auth session");
+    return;
+  }
+
   const { error } = await supabase.from("scores").insert({
-    user_id:      user.id,
+    user_id:      authUid,
     username:     user.username,
     display_name: user.name,
     score,
