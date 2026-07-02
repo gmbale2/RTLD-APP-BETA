@@ -109,7 +109,7 @@ export default function NotificationsScreen() {
   const anyEnabled = Object.values(prefs).some(Boolean);
 
   // ── First-registration flow ────────────────────────────────────────────────
-  const proceed = () => router.replace("/");
+  const proceed = () => router.replace("/hub");
 
   const handleEnable = async () => {
     setLoading(true);
