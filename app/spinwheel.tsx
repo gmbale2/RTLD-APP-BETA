@@ -140,7 +140,7 @@ export default function SpinWheelScreen() {
   const WHEEL_CY = SH * 0.50;
   const WHEEL_TOP = WHEEL_CY - R;
   const HINT_Y    = WHEEL_CY + R + 16;
-  const FS        = Math.max(8, Math.round(IR * 0.082));
+  const FS        = Math.max(10, Math.round(IR * 0.10));
 
   // Rivet positions — recomputed when dimensions change
   const rivets = Array.from({ length: 16 }, (_, i) => {
@@ -159,12 +159,12 @@ export default function SpinWheelScreen() {
     });
   }, []);
 
-  // Global font size — computed after segments are declared
+  // Global font size — threshold at 8 (max word length allowed by Supabase constraint)
   const globalMaxLineLen = segments.length > 0
     ? Math.max(...segments.flatMap(s => s.lines ?? []).map(l => l.length), 1)
-    : 6;
-  const adjFS    = globalMaxLineLen > 6 ? Math.max(6, Math.round(FS * 6 / globalMaxLineLen)) : FS;
-  const adjLineH = adjFS + 3;
+    : 8;
+  const adjFS    = globalMaxLineLen > 8 ? Math.max(8, Math.round(FS * 8 / globalMaxLineLen)) : FS;
+  const adjLineH = adjFS + 4;
 
   const segCount   = segments.length;
   const segAngleR  = (2 * Math.PI) / segCount;
