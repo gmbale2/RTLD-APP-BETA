@@ -188,7 +188,7 @@ export default function SettingsScreen() {
         {/* ── USERNAME ──────────────────────────────────────────────────────── */}
         <Text style={[styles.sectionLabel, { marginTop: 28 }]}>ACCOUNT</Text>
         <View style={[styles.card, styles.cardPadded]}>
-          <Text style={styles.fieldLabel}>CHANGE USERNAME</Text>
+          <Text style={styles.fieldLabel}>CHANGE DISPLAY NAME</Text>
           {user ? (
             <Text style={styles.currentVal}>Current: @{user.username}</Text>
           ) : null}
