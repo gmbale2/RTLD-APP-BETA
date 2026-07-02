@@ -152,13 +152,27 @@ export default function SpinWheelScreen() {
   });
 
   // ── CMS segments (fetched from Supabase, falls back to defaults) ──────────
-  const [segments, setSegments] = useState<WheelSegment[]>(DEFAULT_WHEEL_SEGMENTS);
-  const segmentsRef = useRef<WheelSegment[]>(DEFAULT_WHEEL_SEGMENTS);
+  const [segments, setSegments]     = useState<WheelSegment[]>(DEFAULT_WHEEL_SEGMENTS);
+  const [configReady, setConfigReady] = useState(false);
+  const segmentsRef    = useRef<WheelSegment[]>(DEFAULT_WHEEL_SEGMENTS);
+  const configReadyRef = useRef(false);
+
   useEffect(() => {
-    fetchWheelSegments().then(segs => {
+    let cancelled = false;
+    const markReady = (segs: WheelSegment[]) => {
+      if (cancelled) return;
       setSegments(segs);
       segmentsRef.current = segs;
+      configReadyRef.current = true;
+      setConfigReady(true);
+    };
+    // Safety timeout: unblock after 3 s even if Supabase is slow
+    const timer = setTimeout(() => markReady(segmentsRef.current), 3000);
+    fetchWheelSegments().then((segs) => {
+      clearTimeout(timer);
+      markReady(segs);
     });
+    return () => { cancelled = true; clearTimeout(timer); };
   }, []);
 
   // Global font size — threshold at 8 (max word length allowed by Supabase constraint)
@@ -197,6 +211,7 @@ export default function SpinWheelScreen() {
   // ── Spin ───────────────────────────────────────────────────────────────────
   const spinWheel = useCallback(() => {
     if (phaseRef.current !== "idle") return;
+    if (!configReadyRef.current) return;
     const result = pickWinner(segmentsRef.current);
     winnerRef.current = result;
     setWinner(result);
@@ -383,7 +398,9 @@ export default function SpinWheelScreen() {
       {phase === "idle" && (
         <View style={StyleSheet.absoluteFill} {...pan.panHandlers}>
           <View style={[styles.hintWrap, { top: HINT_Y }]} pointerEvents="none">
-            <Text style={styles.hintText}>← SWIPE THE WHEEL →</Text>
+            <Text style={styles.hintText}>
+              {configReady ? "← SWIPE THE WHEEL →" : "LOADING…"}
+            </Text>
           </View>
         </View>
       )}
