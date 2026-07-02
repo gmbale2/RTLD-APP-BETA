@@ -1,6 +1,10 @@
 [build]
   publish = "dist"
-  command = ""
+  command = "pnpm exec expo export -p web --output-dir dist && node scripts/fix-assets.js"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_VERSION = "10"
 
 [[redirects]]
   from = "/*"

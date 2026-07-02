@@ -83,11 +83,16 @@ export default function HubScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
 
-      {/* Back button */}
-      <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace("/")}>
-        <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
-        <Text style={styles.backText}>BACK</Text>
-      </Pressable>
+      {/* Top bar: back left, settings right */}
+      <View style={styles.topBar}>
+        <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace("/")}>
+          <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
+          <Text style={styles.backText}>BACK</Text>
+        </Pressable>
+        <Pressable style={styles.settingsBtn} onPress={() => router.push("/settings")}>
+          <FontAwesome5 name="cog" size={20} color="rgba(255,255,255,0.4)" />
+        </Pressable>
+      </View>
 
       {/* Header */}
       <Image source={RTLD_LOGO} style={styles.logo} resizeMode="contain" />
@@ -168,12 +173,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
   },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 8,
+  },
   backBtn: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
     gap: 6,
-    marginBottom: 8,
+  },
+  settingsBtn: {
+    padding: 4,
   },
   backText: {
     fontSize: 10,

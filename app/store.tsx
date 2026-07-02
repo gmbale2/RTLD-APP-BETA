@@ -1,14 +1,4 @@
-/**
- * store.tsx  —  RTLD Official Merch Store
- * ─────────────────────────────────────────────────────────────────────────────
- * Shopify product showcase. Displays product cards with images and prices.
- * "View in Store" links open the Shopify product URL in the system browser.
- * No in-app checkout — all purchases happen on the Shopify website.
- *
- * Phase 2: replace MOCK_PRODUCTS with Shopify Storefront API calls.
- */
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,99 +8,37 @@ import {
   Platform,
   TextStyle,
   Linking,
-  Image,
+  ActivityIndicator,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 
-// ── Mock product data (replace with Shopify Storefront API in Phase 2) ────────
+import { fetchCollectionProducts, ShopifyProduct } from "@/utils/shopify";
 
 const SHOPIFY_STORE_URL = "https://returnofthelivingdead.com/collections/all-products-1";
-
-const MOCK_PRODUCTS = [
-  {
-    id: "1",
-    title: "Coffin Creeps™ Tarman",
-    type: "COLLECTIBLE",
-    price: "$134.99",
-    originalPrice: "$174.99",
-    badge: "SALE",
-    badgeColor: "#ff3333",
-    imageUri: "https://returnofthelivingdead.com/cdn/shop/files/Coffincreepproductfinal12.jpg",
-    url: "https://returnofthelivingdead.com/collections/all-products-1/products/coffin-creeps-tarman",
-  },
-  {
-    id: "2",
-    title: "CASKET KIDS Ashley Bobblehead",
-    type: "COLLECTIBLE",
-    price: "$45.00",
-    originalPrice: null,
-    badge: null,
-    badgeColor: null,
-    imageUri: "https://returnofthelivingdead.com/cdn/shop/files/ASHLEY_CC.jpg",
-    url: SHOPIFY_STORE_URL,
-  },
-  {
-    id: "3",
-    title: "BIG HEADZ TARMAN",
-    type: "COLLECTIBLE",
-    price: "$34.99",
-    originalPrice: "$44.99",
-    badge: "SALE",
-    badgeColor: "#ff3333",
-    imageUri: "https://returnofthelivingdead.com/cdn/shop/files/Tarman_BigHeadz_Front_MovieShot_51de0d35-6b9e-4061-9dc5-9c477882069a.jpg",
-    url: SHOPIFY_STORE_URL,
-  },
-  {
-    id: "4",
-    title: "Punk Rock Tarman Poster Tee",
-    type: "T-SHIRT",
-    price: "FROM $24.99",
-    originalPrice: "$29.99",
-    badge: "SALE",
-    badgeColor: "#ff3333",
-    imageUri: "https://returnofthelivingdead.com/cdn/shop/files/FlorianNewCover.jpg",
-    url: SHOPIFY_STORE_URL,
-  },
-  {
-    id: "5",
-    title: "Trioxin Barrel Tee",
-    type: "T-SHIRT",
-    price: "FROM $29.99",
-    originalPrice: null,
-    badge: "NEW",
-    badgeColor: "#39ff14",
-    imageUri: "https://returnofthelivingdead.com/cdn/shop/files/barrelteecover.jpg",
-    url: SHOPIFY_STORE_URL,
-  },
-  {
-    id: "6",
-    title: "UNEEDA Trucker Cap",
-    type: "HAT",
-    price: "$29.99",
-    originalPrice: "$35.99",
-    badge: "SALE",
-    badgeColor: "#ff3333",
-    imageUri: "https://returnofthelivingdead.com/cdn/shop/files/uneedahatcover.jpg",
-    url: SHOPIFY_STORE_URL,
-  },
-];
-
-// ── Component ─────────────────────────────────────────────────────────────────
+const COLLECTION_HANDLE = "more-brains-app";
 
 export default function StoreScreen() {
   const insets = useSafeAreaInsets();
+  const [products, setProducts] = useState<ShopifyProduct[]>([]);
+  const [loading, setLoading]   = useState(true);
 
-  const openProduct = (url: string) => {
-    Linking.openURL(url).catch(() => {});
-  };
+  useEffect(() => {
+    fetchCollectionProducts(COLLECTION_HANDLE).then((p) => {
+      setProducts(p);
+      setLoading(false);
+    });
+  }, []);
+
+  const openURL = (url: string) => Linking.openURL(url).catch(() => {});
 
   return (
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
 
       {/* Back */}
-      <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/hub')}>
+      <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace("/hub")}>
         <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
         <Text style={styles.backText}>BACK</Text>
       </Pressable>
@@ -133,69 +61,79 @@ export default function StoreScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.grid}
       >
-        {MOCK_PRODUCTS.map((product) => (
-          <Pressable
-            key={product.id}
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-            onPress={() => openProduct(product.url)}
-          >
-            {/* Badge */}
-            {product.badge && (
-              <View style={[styles.badge, { backgroundColor: product.badgeColor + "33", borderColor: product.badgeColor! }]}>
-                <Text style={[styles.badgeText, { color: product.badgeColor! }]}>{product.badge}</Text>
-              </View>
-            )}
-
-            {/* Product image */}
-            <Image
-              source={{ uri: product.imageUri }}
-              style={styles.productImage}
-              resizeMode="cover"
-            />
-
-            {/* Info */}
-            <Text style={styles.productType}>{product.type}</Text>
-            <Text style={styles.productTitle} numberOfLines={2}>{product.title}</Text>
-
-            {/* Price row */}
-            <View style={styles.priceRow}>
-              <Text style={styles.productPrice}>{product.price}</Text>
-              {product.originalPrice && (
-                <Text style={styles.originalPrice}>{product.originalPrice}</Text>
+        {loading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator color="#00ff88" size="large" />
+            <Text style={styles.loadingText}>LOADING PRODUCTS…</Text>
+          </View>
+        ) : products.length === 0 ? (
+          <View style={styles.loadingWrap}>
+            <FontAwesome5 name="store-slash" size={32} color="#224433" />
+            <Text style={styles.loadingText}>NO PRODUCTS AVAILABLE</Text>
+          </View>
+        ) : (
+          products.map((product) => (
+            <Pressable
+              key={product.id}
+              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+              onPress={() => openURL(product.url)}
+            >
+              {/* Sale badge */}
+              {product.compareAtPrice && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>SALE</Text>
+                </View>
               )}
-            </View>
 
-            {/* CTA */}
-            <View style={styles.buyBtn}>
-              <Text style={styles.buyBtnText}>VIEW IN STORE</Text>
-              <FontAwesome5 name="external-link-alt" size={9} color="#0a0012" />
-            </View>
-          </Pressable>
-        ))}
+              {/* Product image */}
+              <ExpoImage
+                source={{ uri: product.imageUrl ?? undefined }}
+                contentFit="cover"
+                style={styles.productImage}
+              />
+
+              {/* Info */}
+              <Text style={styles.productType}>{product.productType}</Text>
+              <Text style={styles.productTitle} numberOfLines={2}>{product.title}</Text>
+
+              {/* Price row */}
+              <View style={styles.priceRow}>
+                <Text style={styles.productPrice}>{product.price}</Text>
+                {product.compareAtPrice && (
+                  <Text style={styles.originalPrice}>{product.compareAtPrice}</Text>
+                )}
+              </View>
+
+              {/* CTA */}
+              <View style={styles.buyBtn}>
+                <Text style={styles.buyBtnText}>VIEW IN STORE</Text>
+                <FontAwesome5 name="external-link-alt" size={9} color="#0a0012" />
+              </View>
+            </Pressable>
+          ))
+        )}
 
         {/* Browse all */}
-        <Pressable
-          style={({ pressed }) => [styles.browseAllBtn, pressed && { opacity: 0.75 }]}
-          onPress={() => openProduct(SHOPIFY_STORE_URL)}
-        >
-          <FontAwesome5 name="shopping-bag" size={13} color="#0a0012" solid />
-          <Text style={styles.browseAllText}>BROWSE ALL PRODUCTS</Text>
-        </Pressable>
+        {!loading && (
+          <Pressable
+            style={({ pressed }) => [styles.browseAllBtn, pressed && { opacity: 0.75 }]}
+            onPress={() => openURL(SHOPIFY_STORE_URL)}
+          >
+            <FontAwesome5 name="shopping-bag" size={13} color="#0a0012" solid />
+            <Text style={styles.browseAllText}>BROWSE ALL PRODUCTS</Text>
+          </Pressable>
+        )}
       </ScrollView>
 
     </View>
   );
 }
 
-// ── Glow ─────────────────────────────────────────────────────────────────────
-
 const titleGlow: TextStyle =
   Platform.OS === "web"
     ? // @ts-expect-error
       { textShadow: "0 0 16px #00ff88, 0 0 30px #004422" }
     : { textShadowColor: "#00ff88", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 16 };
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   root: {
@@ -255,10 +193,7 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
 
-  scroll: {
-    flex: 1,
-    width: "100%",
-  },
+  scroll: { flex: 1, width: "100%" },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -267,6 +202,19 @@ const styles = StyleSheet.create({
     maxWidth: 440,
     alignSelf: "center",
     paddingBottom: 16,
+  },
+
+  loadingWrap: {
+    width: "100%",
+    alignItems: "center",
+    paddingVertical: 48,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 10,
+    color: "#224433",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 1.5,
   },
 
   card: {
@@ -281,15 +229,15 @@ const styles = StyleSheet.create({
     gap: 5,
     position: "relative",
   },
-  cardPressed: {
-    opacity: 0.75,
-  },
+  cardPressed: { opacity: 0.75 },
 
   badge: {
     position: "absolute",
     top: 8,
     right: 8,
+    backgroundColor: "rgba(255,51,51,0.2)",
     borderWidth: 1,
+    borderColor: "#ff3333",
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -297,6 +245,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 7,
+    color: "#ff3333",
     fontFamily: "Inter_700Bold",
     letterSpacing: 1,
   },

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Audio } from "expo-av";
+import { loadSoundSettings, getSoundSettingsSync } from "@/utils/soundSettings";
 
 const AMBIENT_SRC     = require("../assets/sounds/ambient.wav");
 const POWER_THEME_SRC = require("../assets/sounds/power_theme.wav");
@@ -59,6 +60,7 @@ export function useSoundPlayer() {
       } catch (e) { console.warn("paramedics SFX:", e); }
     }
 
+    loadSoundSettings().catch(() => {});
     load();
 
     return () => {
@@ -83,12 +85,13 @@ export function useSoundPlayer() {
     if (currentModeRef.current === mode) return;
     currentModeRef.current = mode;
 
+    if (!getSoundSettingsSync().musicEnabled) return;
+
     if (mode === "menu") {
       ambientRef.current?.pauseAsync().catch(() => {});
       powerThemeRef.current?.stopAsync().then(() =>
         powerThemeRef.current?.setPositionAsync(0)
       ).catch(() => {});
-      // menu screen is silent — party_time.m4a removed (no clearance)
     } else if (mode === "gameplay") {
       powerThemeRef.current?.stopAsync().then(() =>
         powerThemeRef.current?.setPositionAsync(0)
@@ -104,6 +107,7 @@ export function useSoundPlayer() {
 
   const playSound = useCallback((name: SoundName) => {
     if (!enabledRef.current) return;
+    if (!getSoundSettingsSync().sfxEnabled) return;
     if (name === "power") {
       brainsRef.current
         ?.setPositionAsync(0)

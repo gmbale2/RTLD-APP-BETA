@@ -26,10 +26,7 @@ import { GameHUD } from "@/components/game/GameHUD";
 import { GameOverlay } from "@/components/game/GameOverlay";
 import { useSoundPlayer } from "@/hooks/useSoundPlayer";
 import { getUser } from "@/utils/userStorage";
-import { consumePendingPrize, clearDoubleActive } from "@/utils/wheelState";
-
-
-const SPIN_THRESHOLD = 20_000;
+import { fetchCmsConfig, DEFAULT_SPIN_THRESHOLD } from "@/utils/cmsConfig";
 
 export default function GameScreen() {
   // ── Registration gate ───────────────────────────────────────────────────────
@@ -38,6 +35,9 @@ export default function GameScreen() {
   useEffect(() => {
     getUser().then((user) => {
       if (!user) router.replace("/register");
+    });
+    fetchCmsConfig().then((cfg) => {
+      spinThresholdRef.current = cfg.spin_threshold;
     });
   }, []);
 
@@ -69,6 +69,7 @@ export default function GameScreen() {
   const [gameKey, setGameKey]     = useState(0);
   const engineRef                  = useRef<GameEngine | null>(null);
   const [gameState, setGameState]  = useState<GameState | null>(null);
+  const spinThresholdRef           = useRef<number>(DEFAULT_SPIN_THRESHOLD);
   const rafRef                     = useRef<number | null>(null);
   const deadTimerRef               = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelTimerRef              = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,8 +81,6 @@ export default function GameScreen() {
   const navPausedRef   = useRef(false);
   const [navPaused, setNavPaused] = useState(false);
 
-  const hasSpunAt20kRef = useRef(false);
-  const doubleScoreRef  = useRef(false);
 
   const { playSound, enableAudio, setMode, pauseMusic, resumeMusic } = useSoundPlayer();
   const prevPhaseRef = useRef<string | null>(null);
@@ -92,9 +91,6 @@ export default function GameScreen() {
 
   useEffect(() => {
     // Reset per-game flags so each new game starts fresh
-    hasSpunAt20kRef.current = false;
-    doubleScoreRef.current  = false;
-    clearDoubleActive();
 
     // Cancel any in-flight RAF / timers from the previous run
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
@@ -175,26 +171,6 @@ export default function GameScreen() {
           return; // Exit without scheduling next RAF
         }
 
-        // ── Spin wheel trigger at 20,000 pts ────────────────────────────────
-        if (
-          !hasSpunAt20kRef.current &&
-          nextState.phase === "playing" &&
-          nextState.score >= SPIN_THRESHOLD
-        ) {
-          hasSpunAt20kRef.current = true;
-          rafRef.current          = null;
-          navPausedRef.current    = true;
-          setNavPaused(true);
-          setGameState({ ...nextState });
-          setTimeout(() => {
-            // @ts-expect-error expo-router types don't include dynamic screens
-            router.push({
-              pathname: "/spinwheel",
-              params: { score: String(nextState.score), level: String(nextState.level) },
-            });
-          }, 50);
-          return;
-        }
       }
 
       if (didTick && engineRef.current) {
@@ -219,10 +195,6 @@ export default function GameScreen() {
   const handleResume = useCallback(() => {
     enableAudio();
     if (navPausedRef.current && loopFnRef.current) {
-      const prize = consumePendingPrize();
-      if (prize?.type === "double") {
-        doubleScoreRef.current = true;
-      }
       navPausedRef.current = false;
       setNavPaused(false);
       resumeMusic();
@@ -269,19 +241,20 @@ export default function GameScreen() {
     if (!gameState || gameState.phase !== "gameover") return;
     const t = setTimeout(() => {
       const finalState = engineRef.current?.getState();
-      let finalScore   = finalState?.score ?? gameState.score;
+      const finalScore = finalState?.score ?? gameState.score;
       const finalLevel = finalState?.level ?? gameState.level;
-      if (doubleScoreRef.current) {
-        finalScore = finalScore * 2;
+      if (finalScore >= spinThresholdRef.current) {
+        // Player earned the wheel — show it before the leaderboard
+        router.push({
+          pathname: "/spinwheel",
+          params: { score: String(finalScore), level: String(finalLevel) },
+        });
+      } else {
+        router.push({
+          pathname: "/gameover",
+          params: { score: String(finalScore), level: String(finalLevel) },
+        });
       }
-      router.push({
-        pathname: "/gameover",
-        params: {
-          score:   String(finalScore),
-          level:   String(finalLevel),
-          doubled: doubleScoreRef.current ? "true" : "false",
-        },
-      });
     }, 1800);
     return () => clearTimeout(t);
   }, [gameState?.phase]);

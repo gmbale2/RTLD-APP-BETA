@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -14,24 +14,11 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 
-import { fetchLeaderboard, LeaderboardResult } from "@/utils/leaderboard";
+import { fetchLeaderboard, fetchPeriodLeaderboard, LeaderboardResult } from "@/utils/leaderboard";
+import { fetchCmsConfig, fetchActivePrize, ActivePrize } from "@/utils/cmsConfig";
 import { getUser } from "@/utils/userStorage";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 type RankMode = "period" | "alltime";
-
-// ── Prize data (replace with CMS / Supabase config table in Phase 2) ─────────
-
-const WEEKLY_PRIZE = {
-  title: "PRIZE OF THE WEEK",
-  description: "RTLD Limited Edition Signed Poster",
-  value: "$150 value",
-  deadline: "Ends Sunday midnight PST",
-  emoji: "🏆",
-};
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function rankColor(rank: number): TextStyle {
   if (rank === 1) return { color: "#FFD700" };
@@ -46,47 +33,79 @@ function ordinal(n: number) {
   return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+function formatPstDate(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-US", {
+    timeZone:  "America/Los_Angeles",
+    month:     "short",
+    day:       "numeric",
+    hour:      "numeric",
+    minute:    "2-digit",
+    timeZoneName: "short",
+  });
+}
 
 export default function RankingScreen() {
-  const insets = useSafeAreaInsets();
-  const [mode, setMode]         = useState<RankMode>("period");
-  const [username, setUsername] = useState<string>("");
-  const [result, setResult]     = useState<LeaderboardResult | null>(null);
-  const [loading, setLoading]   = useState(true);
+  const insets   = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  const [mode, setMode]         = useState<RankMode>("period");
+  const [username, setUsername] = useState<string>("");
+  const [userId, setUserId]     = useState<string>("");
+  const [result, setResult]     = useState<LeaderboardResult | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [prize, setPrize]       = useState<ActivePrize | null>(null);
+
+  // Load user identity, CMS config and active prize once on mount
   useEffect(() => {
-    async function load() {
-      const user = await getUser();
-      if (user) setUsername(user.username);
-      // Phase 2: pass mode to fetchLeaderboard so Supabase returns the
-      // correct view — best_score_period vs best_score_alltime
-      const res = await fetchLeaderboard(0);
+    getUser().then((u) => {
+      if (u) { setUsername(u.username); setUserId(u.id); }
+    });
+    fetchCmsConfig();
+    fetchActivePrize().then(setPrize);
+  }, []);
+
+  // Reload leaderboard whenever mode changes
+  useEffect(() => {
+    setLoading(true);
+    fadeAnim.setValue(0);
+    const fetch = mode === "period" ? fetchPeriodLeaderboard : fetchLeaderboard;
+    fetch(0).then((res) => {
       setResult(res);
       setLoading(false);
       Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
-    }
-    load();
-  }, []);
+    });
+  }, [mode]);
 
   const entries = result?.entries ?? [];
-  const isMock  = result?.isMock ?? false;
-  const myRank  = entries.find((e) => e.username === username)?.rank ?? null;
+  const isMock  = result?.isMock  ?? false;
+  const myRank  = result?.playerRank
+    ?? entries.find((e) => e.user_id === userId || e.username === username)?.rank
+    ?? null;
+
+  const periodDeadline = useMemo(() => {
+    if (!prize?.period_end) return "";
+    return `Ends ${formatPstDate(prize.period_end)}`;
+  }, [prize?.period_end]);
+
+  const periodStart = useMemo(() => formatPstDate(prize?.period_start ?? null), [prize?.period_start]);
+  const periodNoBoardMsg = !loading && entries.length === 0 && mode === "period" && !isMock
+    ? (prize ? "No scores submitted this period yet." : "No active prize period set.")
+    : null;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
 
       {/* Back */}
-      <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/hub')}>
+      <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace("/hub")}>
         <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
         <Text style={styles.backText}>BACK</Text>
       </Pressable>
 
-      {/* Page title */}
+      {/* Title */}
       <Text style={[styles.pageTitle, titleGlow]}>🏆 RANKING</Text>
 
-      {/* ── Mode toggle ────────────────────────────────────────────────── */}
+      {/* Mode toggle */}
       <View style={styles.toggle}>
         <Pressable
           style={[styles.toggleBtn, mode === "period" && styles.toggleBtnActive]}
@@ -108,22 +127,22 @@ export default function RankingScreen() {
         </Pressable>
       </View>
 
-      {/* ── Prize banner — period mode only ───────────────────────────── */}
-      {mode === "period" && (
+      {/* Prize banner — only shown when a prize is active */}
+      {mode === "period" && prize && (
         <View style={styles.prizeBanner}>
           <View style={styles.prizeLeft}>
-            <Text style={styles.prizeBadge}>PRIZE OF THE WEEK</Text>
-            <Text style={styles.prizeName}>{WEEKLY_PRIZE.description}</Text>
-            <Text style={styles.prizeValue}>{WEEKLY_PRIZE.value}</Text>
+            <Text style={styles.prizeBadge}>{prize.title}</Text>
+            <Text style={styles.prizeName}>{prize.description}</Text>
+            {periodStart ? <Text style={styles.prizeStart}>From {periodStart}</Text> : null}
           </View>
           <View style={styles.prizeRight}>
-            <Text style={styles.prizeEmoji}>{WEEKLY_PRIZE.emoji}</Text>
-            <Text style={styles.prizeDeadline}>{WEEKLY_PRIZE.deadline}</Text>
+            <Text style={styles.prizeEmoji}>🏆</Text>
+            <Text style={styles.prizeDeadline}>{periodDeadline}</Text>
           </View>
         </View>
       )}
 
-      {/* ── All-time honour note ───────────────────────────────────────── */}
+      {/* All-time honour note */}
       {mode === "alltime" && (
         <View style={styles.honourBanner}>
           <FontAwesome5 name="star" size={11} color="#FFD700" solid />
@@ -133,8 +152,8 @@ export default function RankingScreen() {
         </View>
       )}
 
-      {/* My rank pill */}
-      {myRank && (
+      {/* My rank */}
+      {myRank ? (
         <View style={styles.myRankRow}>
           <FontAwesome5 name="user" size={11} color="#cc00ff" solid />
           <Text style={styles.myRankText}>
@@ -142,13 +161,13 @@ export default function RankingScreen() {
             {isMock ? "  (DEMO)" : ""}
           </Text>
         </View>
-      )}
+      ) : null}
 
       {isMock && (
         <Text style={styles.mockNote}>⚡ Demo mode — connect Supabase for live rankings</Text>
       )}
 
-      {/* ── Leaderboard ───────────────────────────────────────────────── */}
+      {/* Leaderboard */}
       <Animated.View style={[styles.boardWrap, { opacity: fadeAnim, flex: 1 }]}>
         <Text style={styles.boardLabel}>
           {mode === "period" ? "🌍 TOP 20 — CURRENT PERIOD" : "🌍 TOP 20 — ALL TIME"}
@@ -159,10 +178,13 @@ export default function RankingScreen() {
             <ActivityIndicator color="#cc00ff" size="large" />
             <Text style={styles.loadingText}>LOADING RANKINGS…</Text>
           </View>
+        ) : periodNoBoardMsg ? (
+          <View style={styles.boardLoading}>
+            <FontAwesome5 name="calendar-times" size={28} color="#330044" />
+            <Text style={styles.emptyText}>{periodNoBoardMsg}</Text>
+          </View>
         ) : (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
-
-            {/* Header row */}
             <View style={styles.headerRow}>
               <Text style={[styles.headerCell, { width: 38 }]}>#</Text>
               <Text style={[styles.headerCell, { flex: 1 }]}>PLAYER</Text>
@@ -171,11 +193,11 @@ export default function RankingScreen() {
             </View>
 
             {entries.map((entry, idx) => {
-              const isMe = entry.username === username;
+              const isMe = entry.user_id === userId || entry.username === username;
               return (
                 <View key={`${entry.username}-${idx}`} style={[styles.row, isMe && styles.rowMe]}>
                   <Text style={[styles.cellRank, isMe && styles.cellMe, rankColor(entry.rank)]}>
-                    {entry.rank <= 3 ? ["🥇","🥈","🥉"][entry.rank - 1] : entry.rank}
+                    {entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : entry.rank}
                   </Text>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.cellUser, isMe && styles.cellMe]} numberOfLines={1}>
@@ -211,15 +233,11 @@ export default function RankingScreen() {
   );
 }
 
-// ── Glow ─────────────────────────────────────────────────────────────────────
-
 const titleGlow: TextStyle =
   Platform.OS === "web"
     ? // @ts-expect-error
       { textShadow: "0 0 16px #FFD700, 0 0 30px #aa8800" }
     : { textShadowColor: "#FFD700", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 16 };
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   root: {
@@ -251,7 +269,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // Toggle
   toggle: {
     flexDirection: "row",
     width: "100%",
@@ -273,20 +290,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
   },
-  toggleBtnActive: {
-    backgroundColor: "#cc00ff",
-  },
-  toggleBtnText: {
-    fontSize: 9,
-    color: "#886699",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 1.5,
-  },
-  toggleBtnTextActive: {
-    color: "#0a0012",
-  },
+  toggleBtnActive:     { backgroundColor: "#cc00ff" },
+  toggleBtnText:       { fontSize: 9, color: "#886699", fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
+  toggleBtnTextActive: { color: "#0a0012" },
 
-  // Prize banner
   prizeBanner: {
     width: "100%",
     maxWidth: 440,
@@ -300,44 +307,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  prizeLeft: {
-    flex: 1,
-    gap: 3,
-  },
-  prizeBadge: {
-    fontSize: 8,
-    color: "#FFD700",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 2,
-  },
-  prizeName: {
-    fontSize: 14,
-    color: "#ffffff",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 0.5,
-  },
-  prizeValue: {
-    fontSize: 11,
-    color: "#FFD700",
-    fontFamily: "Inter_700Bold",
-  },
-  prizeRight: {
-    alignItems: "center",
-    gap: 4,
-    paddingLeft: 12,
-  },
-  prizeEmoji: {
-    fontSize: 32,
-  },
-  prizeDeadline: {
-    fontSize: 8,
-    color: "#886600",
-    fontFamily: "Inter_400Regular",
-    textAlign: "center",
-    maxWidth: 90,
-  },
+  prizeLeft:    { flex: 1, gap: 3 },
+  prizeBadge:   { fontSize: 8, color: "#FFD700", fontFamily: "Inter_700Bold", letterSpacing: 2 },
+  prizeName:    { fontSize: 14, color: "#ffffff", fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
+  prizeValue:   { fontSize: 11, color: "#FFD700", fontFamily: "Inter_700Bold" },
+  prizeStart:   { fontSize: 8, color: "#665500", fontFamily: "Inter_400Regular", marginTop: 2 },
+  prizeRight:   { alignItems: "center", gap: 4, paddingLeft: 12 },
+  prizeEmoji:   { fontSize: 32 },
+  prizeDeadline: { fontSize: 8, color: "#886600", fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 90 },
 
-  // Honour banner
   honourBanner: {
     width: "100%",
     maxWidth: 440,
@@ -359,7 +337,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
 
-  // My rank
   myRankRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -367,48 +344,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     alignSelf: "flex-start",
   },
-  myRankText: {
-    fontSize: 10,
-    color: "#886699",
-    fontFamily: "Inter_400Regular",
-    letterSpacing: 1,
-  },
-  myRankNum: {
-    color: "#cc00ff",
-    fontFamily: "Inter_700Bold",
-  },
-  mockNote: {
-    fontSize: 9,
-    color: "#442233",
-    fontFamily: "Inter_400Regular",
-    alignSelf: "flex-start",
-    marginBottom: 6,
-  },
+  myRankText: { fontSize: 10, color: "#886699", fontFamily: "Inter_400Regular", letterSpacing: 1 },
+  myRankNum:  { color: "#cc00ff", fontFamily: "Inter_700Bold" },
+  mockNote:   { fontSize: 9, color: "#442233", fontFamily: "Inter_400Regular", alignSelf: "flex-start", marginBottom: 6 },
 
-  // Board
-  boardWrap: {
-    width: "100%",
-    maxWidth: 440,
-  },
-  boardLabel: {
-    fontSize: 10,
-    color: "#cc00ff",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 2,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  boardLoading: {
-    alignItems: "center",
-    paddingVertical: 40,
-    gap: 10,
-  },
-  loadingText: {
-    fontSize: 10,
-    color: "#553366",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 1,
-  },
+  boardWrap:  { width: "100%", maxWidth: 440 },
+  boardLabel: { fontSize: 10, color: "#cc00ff", fontFamily: "Inter_700Bold", letterSpacing: 2, textAlign: "center", marginBottom: 8 },
+  boardLoading: { alignItems: "center", paddingVertical: 40, gap: 10 },
+  loadingText:  { fontSize: 10, color: "#553366", fontFamily: "Inter_700Bold", letterSpacing: 1 },
+  emptyText:    { fontSize: 12, color: "#553366", fontFamily: "Inter_400Regular", textAlign: "center", marginTop: 8, lineHeight: 18 },
 
   headerRow: {
     flexDirection: "row",
@@ -419,12 +363,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#330044",
     marginBottom: 2,
   },
-  headerCell: {
-    fontSize: 8,
-    color: "#553366",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 1.5,
-  },
+  headerCell: { fontSize: 8, color: "#553366", fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
+
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -438,43 +378,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#7700aa",
   },
-  cellRank: {
-    width: 38,
-    fontSize: 12,
-    color: "#886699",
-    fontFamily: "Inter_700Bold",
-  },
-  cellUser: {
-    fontSize: 12,
-    color: "#ccaadd",
-    fontFamily: "Inter_400Regular",
-  },
-  cellDisplayName: {
-    fontSize: 9,
-    color: "#553366",
-    fontFamily: "Inter_400Regular",
-    marginTop: 1,
-  },
-  cellScore: {
-    width: 90,
-    fontSize: 12,
-    color: "#ccaadd",
-    fontFamily: "Inter_700Bold",
-    textAlign: "right",
-  },
-  cellLevel: {
-    width: 44,
-    fontSize: 11,
-    color: "#886699",
-    fontFamily: "Inter_400Regular",
-    textAlign: "right",
-  },
-  cellMe: {
-    color: "#ffffff",
-    fontFamily: "Inter_700Bold",
-  },
+  cellRank:        { width: 38, fontSize: 12, color: "#886699", fontFamily: "Inter_700Bold" },
+  cellUser:        { fontSize: 12, color: "#ccaadd", fontFamily: "Inter_400Regular" },
+  cellDisplayName: { fontSize: 9, color: "#553366", fontFamily: "Inter_400Regular", marginTop: 1 },
+  cellScore:       { width: 90, fontSize: 12, color: "#ccaadd", fontFamily: "Inter_700Bold", textAlign: "right" },
+  cellLevel:       { width: 44, fontSize: 11, color: "#886699", fontFamily: "Inter_400Regular", textAlign: "right" },
+  cellMe:          { color: "#ffffff", fontFamily: "Inter_700Bold" },
 
-  // Play button
   playBtn: {
     width: "100%",
     maxWidth: 440,
@@ -487,10 +397,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  playBtnText: {
-    color: "#0a0012",
-    fontSize: 12,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 2,
-  },
+  playBtnText: { color: "#0a0012", fontSize: 12, fontFamily: "Inter_700Bold", letterSpacing: 2 },
 });

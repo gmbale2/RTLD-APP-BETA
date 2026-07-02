@@ -15,7 +15,7 @@
  * probability values MUST sum to 1.0
  */
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -35,15 +35,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { setPendingPrize } from "@/utils/wheelState";
+import { fetchWheelSegments, DEFAULT_WHEEL_SEGMENTS, type SegmentType, type WheelSegment } from "@/utils/cmsConfig";
 
 // ── Static assets ─────────────────────────────────────────────────────────────
 const BG_IMAGE = require("../assets/images/spinwheel_bg.jpg");
 
 // ── Segment constants (independent of screen size) ────────────────────────────
-const SEG_COUNT   = 8;
-const SEG_ANGLE_R = (2 * Math.PI) / SEG_COUNT;
-const SEG_ANGLE_D = 360 / SEG_COUNT;
 
 // ── Visual theme ──────────────────────────────────────────────────────────────
 const DARK_GREEN  = "#1d5c1d";
@@ -58,37 +55,14 @@ const NEON_GREEN  = "#39ff14";
 // Swap this to "Gagalin_400Regular" once the TTF is added to the project
 const WHEEL_FONT  = "Boogaloo_400Regular";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-type SegmentType = "discount" | "double" | "merch" | "points" | "none";
-
-interface WheelSegment {
-  id: string;
-  lines: string[];
-  type: SegmentType;
-  value: string | null;
-  code: string | null;
-  probability: number;
-}
-
-// ── CMS-READY WHEEL CONFIG ────────────────────────────────────────────────────
+// ── Store URL ─────────────────────────────────────────────────────────────────
 const STORE_URL = "https://returnofthelivingdead.com/collections/all-products-1";
 
-const WHEEL_CONFIG: WheelSegment[] = [
-  { id: "s0", lines: ["DOUBLE", "POINTS"],   type: "double",   value: null,   code: null,     probability: 0.10 },
-  { id: "s1", lines: ["20%", "OFF CODE"],    type: "discount", value: "20",   code: "RTLD20", probability: 0.12 },
-  { id: "s2", lines: ["MERCH", "GIFT"],      type: "merch",    value: null,   code: null,     probability: 0.08 },
-  { id: "s3", lines: ["30%", "OFF CODE"],    type: "discount", value: "30",   code: "RTLD30", probability: 0.08 },
-  { id: "s4", lines: ["15%", "OFF CODE"],    type: "discount", value: "15",   code: "RTLD15", probability: 0.16 },
-  { id: "s5", lines: ["+1,000", "POINTS"],   type: "points",   value: "1000", code: null,     probability: 0.20 },
-  { id: "s6", lines: ["OUT OF", "LUCK"],     type: "none",     value: null,   code: null,     probability: 0.16 },
-  { id: "s7", lines: ["10%", "OFF CODE"],    type: "discount", value: "10",   code: "RTLD10", probability: 0.10 },
-];
-
 // ── SVG: pie-slice path (clockwise, origin at top) ────────────────────────────
-function segPath(r: number, idx: number): string {
+function segPath(r: number, idx: number, segAngleR: number): string {
   const cx = r, cy = r;
-  const start = idx * SEG_ANGLE_R - Math.PI / 2;
-  const end   = start + SEG_ANGLE_R;
+  const start = idx * segAngleR - Math.PI / 2;
+  const end   = start + segAngleR;
   const x1 = cx + r * Math.cos(start);
   const y1 = cy + r * Math.sin(start);
   const x2 = cx + r * Math.cos(end);
@@ -97,41 +71,43 @@ function segPath(r: number, idx: number): string {
 }
 
 // ── Prize helpers ─────────────────────────────────────────────────────────────
-function pickWinner(): { seg: WheelSegment; idx: number } {
+function pickWinner(segs: WheelSegment[]): { seg: WheelSegment; idx: number } {
   const r = Math.random();
   let cum = 0;
-  for (let i = 0; i < WHEEL_CONFIG.length; i++) {
-    cum += WHEEL_CONFIG[i].probability;
-    if (r <= cum) return { seg: WHEEL_CONFIG[i], idx: i };
+  for (let i = 0; i < segs.length; i++) {
+    cum += segs[i].probability;
+    if (r <= cum) return { seg: segs[i], idx: i };
   }
-  return { seg: WHEEL_CONFIG[WHEEL_CONFIG.length - 1], idx: WHEEL_CONFIG.length - 1 };
+  return { seg: segs[segs.length - 1], idx: segs.length - 1 };
 }
 
 function prizeEmoji(type: SegmentType) {
-  if (type === "discount") return "🎟️";
-  if (type === "double")   return "⚡";
-  if (type === "merch")    return "🎁";
-  if (type === "points")   return "💀";
+  if (type === "discount")    return "🎟️";
+  if (type === "multiplier")  return "⚡";
+  if (type === "shopify")     return "🎁";
+  if (type === "addup")       return "💀";
   return "💀";
 }
 
 function prizeTitle(seg: WheelSegment) {
-  if (seg.type === "discount") return `${seg.value}% OFF!`;
-  if (seg.type === "double")   return "DOUBLE POINTS!";
-  if (seg.type === "merch")    return "MERCH GIFT!";
-  if (seg.type === "points")   return "+1,000 POINTS!";
-  return "OUT OF LUCK…";
+  if (seg.result_title) return seg.result_title;
+  if (seg.type === "discount")   return `${seg.discount_pct}% OFF!`;
+  if (seg.type === "multiplier") return `${seg.score_value}× POINTS!`;
+  if (seg.type === "shopify")    return "MERCH GIFT!";
+  if (seg.type === "addup")      return `+${(seg.score_value ?? 0).toLocaleString()} POINTS!`;
+  return "NO LUCK…";
 }
 
 function prizeDesc(seg: WheelSegment) {
+  if (seg.result_desc) return seg.result_desc;
   if (seg.type === "discount")
-    return `Use the code below at checkout for ${seg.value}% off your RTLD order.`;
-  if (seg.type === "double")
-    return "Your score this game will be registered ×2 on the worldwide leaderboard!";
-  if (seg.type === "merch")
-    return "You won exclusive RTLD merch!\nDM @rtldofficial on Instagram with your game username to claim.";
-  if (seg.type === "points")
-    return "1,000 bonus points have been added to your score!";
+    return `Use the code below at checkout for ${seg.discount_pct}% off your RTLD order.`;
+  if (seg.type === "multiplier")
+    return `Your score this game will be registered ×${seg.score_value} on the worldwide leaderboard!`;
+  if (seg.type === "shopify")
+    return "You won exclusive RTLD merch! Tap below to claim it in the store.";
+  if (seg.type === "addup")
+    return `${(seg.score_value ?? 0).toLocaleString()} bonus points have been added to your score!`;
   return "The undead gods weren't smiling today. Better luck next time!";
 }
 
@@ -173,6 +149,23 @@ export default function SpinWheelScreen() {
     return { x: R + rv * Math.cos(a), y: R + rv * Math.sin(a) };
   });
 
+  // ── CMS segments (fetched from Supabase, falls back to defaults) ──────────
+  const [segments, setSegments] = useState<WheelSegment[]>(DEFAULT_WHEEL_SEGMENTS);
+  useEffect(() => {
+    fetchWheelSegments().then(segs => setSegments(segs));
+  }, []);
+
+  // Global font size — computed after segments are declared
+  const globalMaxLineLen = segments.length > 0
+    ? Math.max(...segments.flatMap(s => s.lines ?? []).map(l => l.length), 1)
+    : 6;
+  const adjFS    = globalMaxLineLen > 6 ? Math.max(6, Math.round(FS * 6 / globalMaxLineLen)) : FS;
+  const adjLineH = adjFS + 3;
+
+  const segCount   = segments.length;
+  const segAngleR  = (2 * Math.PI) / segCount;
+  const segAngleD  = 360 / segCount;
+
   // ── Phase & winner ─────────────────────────────────────────────────────────
   const phaseRef  = useRef<Phase>("idle");
   const [phase, setPhase]   = useState<Phase>("idle");
@@ -198,33 +191,26 @@ export default function SpinWheelScreen() {
   // ── Spin ───────────────────────────────────────────────────────────────────
   const spinWheel = useCallback(() => {
     if (phaseRef.current !== "idle") return;
-    const result = pickWinner();
+    const result = pickWinner(segments);
     winnerRef.current = result;
     setWinner(result);
     setPhaseSync("spinning");
 
-    const segCenter = result.idx * SEG_ANGLE_D + SEG_ANGLE_D / 2;
+    const segCenter = result.idx * segAngleD + segAngleD / 2;
     const current   = angleRef.current % 360;
     let   delta     = (360 - segCenter - current + 360) % 360;
-    if (delta < SEG_ANGLE_D) delta += 360;
-    const total  = angleRef.current + 4 * 360 + delta;
+    if (delta < segAngleD) delta += 360;
+    const total  = angleRef.current + 6 * 360 + delta;
 
     Animated.timing(spinAngle, {
       toValue:         total,
-      duration:        4600,
-      easing:          Easing.out(Easing.bezier(0.15, 0.85, 0.35, 1)),
+      duration:        6000,
+      easing:          Easing.out(Easing.poly(4)),
       useNativeDriver: true,
     }).start(() => {
       angleRef.current = total;
       const w = winnerRef.current;
       if (!w) return;
-      setPendingPrize({
-        type:     w.seg.type,
-        label:    w.seg.lines.join(" "),
-        code:     w.seg.code  ?? undefined,
-        value:    w.seg.value ?? undefined,
-        storeUrl: STORE_URL,
-      });
       setPhaseSync("result");
       Animated.spring(cardAnim, {
         toValue:         0,
@@ -263,13 +249,18 @@ export default function SpinWheelScreen() {
     let doubled = false;
     let wheelPrize = "";
     if (seg) {
-      if (seg.type === "double") {
-        finalScore = baseScore * 2; doubled = true; wheelPrize = "DOUBLE POINTS";
-      } else if (seg.type === "points") {
-        finalScore = baseScore + 1000; wheelPrize = "+1,000 POINTS";
+      if (seg.type === "multiplier") {
+        const mult = seg.score_value ?? 2;
+        finalScore = baseScore * mult;
+        doubled = mult === 2;
+        wheelPrize = `${mult}× POINTS`;
+      } else if (seg.type === "addup") {
+        const pts = seg.score_value ?? 0;
+        finalScore = baseScore + pts;
+        wheelPrize = `+${pts.toLocaleString()} POINTS`;
       } else if (seg.type === "discount") {
-        wheelPrize = `${seg.value}% OFF CODE: ${seg.code}`;
-      } else if (seg.type === "merch") {
+        wheelPrize = `${seg.discount_pct}% OFF CODE: ${seg.discount_code}`;
+      } else if (seg.type === "shopify") {
         wheelPrize = "MERCH GIFT";
       }
     }
@@ -337,24 +328,23 @@ export default function SpinWheelScreen() {
         pointerEvents="none"
       >
         <Svg width={IR * 2} height={IR * 2}>
-          {WHEEL_CONFIG.map((seg, i) => {
-            const centerA = i * SEG_ANGLE_R - Math.PI / 2 + SEG_ANGLE_R / 2;
+          {segments.map((seg, i) => {
+            const centerA = i * segAngleR - Math.PI / 2 + segAngleR / 2;
             const tr = IR * 0.60;
             const tx = IR + tr * Math.cos(centerA);
             const ty = IR + tr * Math.sin(centerA);
-            const rot = i * SEG_ANGLE_D + SEG_ANGLE_D / 2;
-            const lineH = FS + 3;
+            const rot = i * segAngleD + segAngleD / 2;
             return (
               <G key={seg.id}>
-                <Path d={segPath(IR, i)} fill={i % 2 === 0 ? DARK_GREEN : SAGE_GREEN} />
+                <Path d={segPath(IR, i, segAngleR)} fill={i % 2 === 0 ? DARK_GREEN : SAGE_GREEN} />
                 <G transform={`translate(${tx.toFixed(1)},${ty.toFixed(1)}) rotate(${rot})`}>
                   {seg.lines.map((line, li) => (
                     <SvgText
                       key={li}
                       textAnchor="middle"
-                      y={((li - (seg.lines.length - 1) / 2) * lineH).toFixed(1)}
+                      y={((li - (seg.lines.length - 1) / 2) * adjLineH).toFixed(1)}
                       fill={TEXT_COL}
-                      fontSize={FS}
+                      fontSize={adjFS}
                       fontWeight="bold"
                       fontFamily={WHEEL_FONT}
                     >
@@ -398,7 +388,7 @@ export default function SpinWheelScreen() {
           <Text
             style={[
               styles.resultTitle,
-              winner.seg.type === "none" ? styles.resultTitleNone : styles.resultTitleWin,
+              winner.seg.type === "out_of_luck" ? styles.resultTitleNone : styles.resultTitleWin,
               titleGlow,
             ]}
           >
@@ -406,15 +396,15 @@ export default function SpinWheelScreen() {
           </Text>
           <Text style={styles.resultDesc}>{prizeDesc(winner.seg)}</Text>
 
-          {winner.seg.type === "discount" && winner.seg.code && (
+          {winner.seg.type === "discount" && winner.seg.discount_code && (
             <>
               <View style={styles.codeBox}>
-                <Text style={styles.codeText}>{winner.seg.code}</Text>
+                <Text style={styles.codeText}>{winner.seg.discount_code}</Text>
               </View>
               <View style={styles.codeActions}>
                 <Pressable
                   style={({ pressed }) => [styles.copyBtn, pressed && { opacity: 0.75 }]}
-                  onPress={() => handleCopy(winner.seg.code!)}
+                  onPress={() => handleCopy(winner.seg.discount_code!)}
                 >
                   <FontAwesome5 name={copied ? "check" : "copy"} size={11} color="#0a0012" />
                   <Text style={styles.copyBtnText}>{copied ? "COPIED!" : "COPY CODE"}</Text>
@@ -430,12 +420,22 @@ export default function SpinWheelScreen() {
             </>
           )}
 
+          {winner.seg.type === "shopify" && winner.seg.shopify_url && (
+            <Pressable
+              style={({ pressed }) => [styles.storeBtn, { alignSelf: "stretch", justifyContent: "center" }, pressed && { opacity: 0.75 }]}
+              onPress={() => Linking.openURL(winner.seg.shopify_url!)}
+            >
+              <FontAwesome5 name="shopping-bag" size={11} color="#0a0012" />
+              <Text style={styles.storeBtnText}>CLAIM IN STORE</Text>
+            </Pressable>
+          )}
+
           <Pressable
             style={({ pressed }) => [styles.continueBtn, pressed && { opacity: 0.75 }]}
             onPress={handleContinue}
           >
             <Text style={styles.continueBtnText}>
-              {winner.seg.type === "none" ? "CONTINUE PLAYING" : "CONTINUE →"}
+              {winner.seg.type === "out_of_luck" ? "CONTINUE PLAYING" : "CONTINUE →"}
             </Text>
           </Pressable>
         </Animated.View>

@@ -26,6 +26,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { saveUser } from "@/utils/userStorage";
+import { supabase } from "@/utils/supabase";
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
@@ -87,8 +88,20 @@ export default function RegisterScreen() {
     setGlobalErr(null);
 
     try {
-      await saveUser({ name, username, email });
-      // Phase 2: check Supabase for username uniqueness here before saving
+      // Check username uniqueness in Supabase before saving
+      if (typeof supabase !== "undefined" && supabase) {
+        const { data: existing } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("username", username.trim().toLowerCase())
+          .maybeSingle();
+        if (existing) {
+          setUsernameErr("That username is already taken.");
+          setLoading(false);
+          return;
+        }
+      }
+      await saveUser({ name, username, email, emailConsent });
       router.replace("/notifications");
     } catch (err) {
       setGlobalErr("Something went wrong. Please try again.");

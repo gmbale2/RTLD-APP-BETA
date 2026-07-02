@@ -20,3 +20,10 @@ brain-hunter-deploy-dist/
 .env
 .env.local
 .env*.local
+
+# Netlify internal (site-specific, regenerated per account)
+.netlify/
+
+# macOS
+.DS_Store
+**/.DS_Store
