@@ -86,17 +86,6 @@ export async function submitScore(score: number, level: number): Promise<void> {
   const user = await getUser();
   if (!user) return;
 
-  // Ensure an active auth session exists (may have expired between visits)
-  let { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) {
-    const { data } = await supabase.auth.signInAnonymously();
-    session = data.session;
-  }
-  if (!session?.user) {
-    console.warn("[leaderboard] submitScore: could not establish auth session");
-    return;
-  }
-
   const { error } = await supabase.from("scores").insert({
     user_id:      user.id,
     username:     user.username,
