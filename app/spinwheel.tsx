@@ -224,6 +224,7 @@ export default function SpinWheelScreen() {
           user_id:     user.id,
           username:    user.username,
           prize_title: prizeTitle(w.seg),
+          prize_type:  w.seg.type,
           prize_desc:  prizeDesc(w.seg) || null,
           score:       Number(score) || null,
           level:       Number(level) || null,
