@@ -296,6 +296,7 @@ export default function GameOverScreen() {
       const user = await getUser();
       if (user) setUsername(user.username);
       await submitScore(score, level);
+      await new Promise((r) => setTimeout(r, 800));
       const res = await fetchLeaderboard(score);
       setResult(res);
       setLoading(false);
