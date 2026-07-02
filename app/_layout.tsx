@@ -12,6 +12,19 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Platform } from "react-native";
+
+// Disable text/element selection globally on web — prevents accidental
+// selection while playing the game or spinning the wheel.
+// Input/textarea fields are re-enabled so typing still works normally.
+if (Platform.OS === "web" && typeof document !== "undefined") {
+  const s = document.createElement("style");
+  s.textContent = `
+    * { user-select: none !important; -webkit-user-select: none !important; }
+    input, textarea { user-select: text !important; -webkit-user-select: text !important; }
+  `;
+  document.head.appendChild(s);
+}
 
 SplashScreen.preventAutoHideAsync();
 
