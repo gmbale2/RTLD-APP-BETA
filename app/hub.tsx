@@ -111,13 +111,7 @@ export default function HubScreen() {
           <Pressable
             key={s.key}
             style={({ pressed }) => [styles.cardWrap, pressed && styles.cardPressed]}
-            onPress={() => {
-              if (s.route === "/") {
-                router.canGoBack() ? router.back() : router.replace("/");
-              } else {
-                router.push(s.route);
-              }
-            }}
+            onPress={() => router.replace(s.route)}
           >
             {/* Full-bleed background image — expo-image supports contentPosition on native + web */}
             <ExpoImage
