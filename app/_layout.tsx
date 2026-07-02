@@ -24,7 +24,8 @@ function RootLayoutNav() {
       <Stack.Screen name="hub"      options={{ headerShown: false, animation: "slide_from_bottom" }} />
       <Stack.Screen name="ranking"  options={{ headerShown: false, animation: "slide_from_right" }} />
       <Stack.Screen name="store"    options={{ headerShown: false, animation: "slide_from_right" }} />
-      <Stack.Screen name="updates"   options={{ headerShown: false, animation: "slide_from_right" }} />
+      <Stack.Screen name="updates"  options={{ headerShown: false, animation: "slide_from_right" }} />
+      <Stack.Screen name="article"  options={{ headerShown: false, animation: "slide_from_right" }} />
       <Stack.Screen name="exclusive" options={{ headerShown: false, animation: "slide_from_right" }} />
       <Stack.Screen name="spinwheel"     options={{ headerShown: false, animation: "fade" }} />
       <Stack.Screen name="notifications" options={{ headerShown: false, animation: "fade" }} />

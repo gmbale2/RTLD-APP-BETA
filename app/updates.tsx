@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Platform,
   TextStyle,
-  Linking,
   ActivityIndicator,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
@@ -16,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 import { fetchBlogArticles, ShopifyArticle } from "@/utils/shopify";
+import { setArticles as storeArticles } from "@/utils/articleStore";
 
 const BLOG_HANDLE = "tarman-today";
 
@@ -34,6 +34,7 @@ export default function UpdatesScreen() {
 
   useEffect(() => {
     fetchBlogArticles(BLOG_HANDLE).then((a) => {
+      storeArticles(a);
       setArticles(a);
       setLoading(false);
     });
@@ -48,11 +49,8 @@ export default function UpdatesScreen() {
       excerpt:   a.excerpt,
       heroImage: a.imageUrl ?? "",
       hasVideo,
-      url:       a.url,
     };
   });
-
-  const openLink = (url: string) => Linking.openURL(url).catch(() => {});
 
   return (
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
@@ -85,7 +83,7 @@ export default function UpdatesScreen() {
             <Pressable
               key={post.id}
               style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-              onPress={() => openLink(post.url)}
+              onPress={() => router.push({ pathname: "/article", params: { id: post.id } })}
             >
               <View style={styles.heroArea}>
                 <ExpoImage

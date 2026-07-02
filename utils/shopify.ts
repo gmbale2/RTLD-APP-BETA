@@ -97,6 +97,7 @@ export interface ShopifyArticle {
   id:          string;
   title:       string;
   excerpt:     string;
+  contentHtml: string;
   publishedAt: string;
   handle:      string;
   imageUrl:    string | null;
@@ -113,6 +114,7 @@ const ARTICLES_QUERY = `
             id
             title
             excerpt
+            contentHtml
             publishedAt
             handle
             tags
@@ -134,6 +136,7 @@ export async function fetchBlogArticles(
       id:          node.id,
       title:       node.title,
       excerpt:     node.excerpt ?? "",
+      contentHtml: node.contentHtml ?? "",
       publishedAt: node.publishedAt,
       handle:      node.handle,
       imageUrl:    node.image?.url ?? null,
