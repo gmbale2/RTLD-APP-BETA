@@ -2,7 +2,7 @@
  * hub.tsx  —  Central RTLD Directory
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { fetchCollectionProducts } from "@/utils/shopify";
 
 const RTLD_LOGO = require("../assets/images/rtld_logo_cropped.png");
 
@@ -89,6 +90,13 @@ const SECTIONS = [
 
 export default function HubScreen() {
   const insets = useSafeAreaInsets();
+  const [filmThumb, setFilmThumb] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCollectionProducts("new-movie-opportunities", 1).then((products) => {
+      if (products[0]?.imageUrl) setFilmThumb(products[0].imageUrl);
+    });
+  }, []);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
@@ -123,9 +131,8 @@ export default function HubScreen() {
             style={({ pressed }) => [styles.cardWrap, pressed && styles.cardPressed]}
             onPress={() => router.replace(s.route)}
           >
-            {/* Full-bleed background image — expo-image supports contentPosition on native + web */}
             <ExpoImage
-              source={s.image}
+              source={s.key === "filmopps" && filmThumb ? { uri: filmThumb } : s.image}
               contentFit="cover"
               contentPosition={s.contentPosition}
               style={StyleSheet.absoluteFillObject}
