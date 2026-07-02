@@ -26,7 +26,7 @@ const RTLD_LOGO = require("../assets/images/rtld_logo_cropped.png");
 const SECTIONS = [
   {
     key: "game",
-    image: require("../assets/images/spin_poster.jpg"),
+    image: require("../assets/images/hub_game.png"),
     contentPosition: { top: "15%", left: "50%" },
     label: "PLAY THE GAME",
     sub: "MORE BRAINS",
