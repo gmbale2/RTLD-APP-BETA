@@ -81,7 +81,7 @@ const SECTIONS = [
     label: "NEW FILM EXCLUSIVES",
     sub: "NEW MOVIE OPPORTUNITIES",
     desc: "Exclusive film opportunities for More Brains members.",
-    accentColor: "#aa33ff",
+    accentColor: "#FFD700",
     route: "/filmopps" as const,
   },
 ];
