@@ -22,6 +22,7 @@ interface VimeoVideo {
 }
 
 interface VimeoMeta {
+  title: string;
   thumbnailUrl: string;
   duration: number;
 }
@@ -38,6 +39,7 @@ async function fetchVimeoMeta(id: string): Promise<VimeoMeta | null> {
     if (!res.ok) return null;
     const data = await res.json();
     return {
+      title: data.title ?? "",
       thumbnailUrl: data.thumbnail_url ?? "",
       duration: data.duration ?? 0,
     };
@@ -188,7 +190,7 @@ export default function ExclusiveScreen() {
               </View>
 
               <View style={styles.cardBody}>
-                <Text style={styles.videoTitle}>{video.title}</Text>
+                <Text style={styles.videoTitle}>{meta?.title || video.title}</Text>
                 <View style={styles.watchRow}>
                   <Text style={styles.watchText}>WATCH NOW</Text>
                   <FontAwesome5 name="play" size={8} color="#ff2222" />
