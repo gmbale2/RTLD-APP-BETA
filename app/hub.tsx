@@ -73,6 +73,16 @@ const SECTIONS = [
     accentColor: "#39ff14",
     route: "/updates" as const,
   },
+  {
+    key: "filmopps",
+    image: require("../assets/images/hub_updates.jpg"),
+    contentPosition: { top: "50%", left: "50%" },
+    label: "NEW FILM EXCLUSIVES",
+    sub: "NEW MOVIE OPPORTUNITIES",
+    desc: "Exclusive film opportunities for More Brains members.",
+    accentColor: "#aa33ff",
+    route: "/filmopps" as const,
+  },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────

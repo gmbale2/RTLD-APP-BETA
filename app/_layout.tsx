@@ -29,6 +29,7 @@ function RootLayoutNav() {
       <Stack.Screen name="exclusive" options={{ headerShown: false, animation: "slide_from_right" }} />
       <Stack.Screen name="spinwheel"     options={{ headerShown: false, animation: "fade" }} />
       <Stack.Screen name="notifications" options={{ headerShown: false, animation: "fade" }} />
+      <Stack.Screen name="filmopps"      options={{ headerShown: false, animation: "slide_from_right" }} />
       <Stack.Screen name="settings"      options={{ headerShown: false, animation: "slide_from_right" }} />
     </Stack>
   );
