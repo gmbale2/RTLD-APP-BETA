@@ -88,15 +88,27 @@ export default function RegisterScreen() {
     setGlobalErr(null);
 
     try {
-      // Check username uniqueness in Supabase before saving
       if (typeof supabase !== "undefined" && supabase) {
-        const { data: existing } = await supabase
+        // Check username uniqueness
+        const { data: existingUser } = await supabase
           .from("profiles")
           .select("id")
           .eq("username", username.trim().toLowerCase())
           .maybeSingle();
-        if (existing) {
+        if (existingUser) {
           setUsernameErr("That username is already taken.");
+          setLoading(false);
+          return;
+        }
+
+        // Check email uniqueness
+        const { data: existingEmail } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", email.trim().toLowerCase())
+          .maybeSingle();
+        if (existingEmail) {
+          setEmailErr("An account with this email already exists.");
           setLoading(false);
           return;
         }
