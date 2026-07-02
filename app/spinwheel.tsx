@@ -36,6 +36,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { fetchWheelSegments, DEFAULT_WHEEL_SEGMENTS, type SegmentType, type WheelSegment } from "@/utils/cmsConfig";
+import { supabase } from "@/utils/supabase";
+import { getUser } from "@/utils/userStorage";
 
 // ── Static assets ─────────────────────────────────────────────────────────────
 const BG_IMAGE = require("../assets/images/spinwheel_bg.jpg");
@@ -216,6 +218,19 @@ export default function SpinWheelScreen() {
       const w = winnerRef.current;
       if (!w) return;
       setPhaseSync("result");
+      getUser().then((user) => {
+        if (!user) return;
+        supabase.from("wheel_rewards").insert({
+          user_id:     user.id,
+          username:    user.username,
+          prize_title: prizeTitle(w.seg),
+          prize_desc:  prizeDesc(w.seg) || null,
+          score:       Number(score) || null,
+          level:       Number(level) || null,
+        }).then(({ error }) => {
+          if (error) console.warn("[wheel_rewards]", error.message);
+        });
+      });
       Animated.spring(cardAnim, {
         toValue:         0,
         useNativeDriver: true,
