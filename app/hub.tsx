@@ -145,7 +145,7 @@ export default function HubScreen() {
             <View style={[styles.cardAccentBar, { backgroundColor: s.accentColor }]} />
 
             {/* Text content pinned to bottom */}
-            <View style={styles.cardContent}>
+            <View style={[styles.cardContent, { borderTopColor: s.accentColor + "55" }]}>
               <View style={styles.cardTextBlock}>
                 <Text style={[styles.cardLabel, { color: s.accentColor }]}>{s.label}</Text>
               </View>
@@ -262,12 +262,13 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    paddingTop: 12,
-    backgroundColor: "rgba(0,0,0,0.28)",
+    paddingBottom: 11,
+    paddingTop: 11,
+    backgroundColor: "rgba(0,0,0,0.72)",
+    borderTopWidth: 1,
   },
   cardTextBlock: {
     flex: 1,
