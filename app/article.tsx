@@ -37,6 +37,17 @@ const ARTICLE_CSS = `
   ul, ol { padding-left: 20px; }
   li { margin: 6px 0; }
   hr { border: none; border-top: 1px solid #1a2200; margin: 20px 0; }
+  iframe {
+    max-width: 100% !important;
+    width: 100% !important;
+    aspect-ratio: 16 / 9;
+    height: auto !important;
+    border: none;
+    border-radius: 8px;
+    margin: 12px 0;
+    display: block;
+  }
+  .video-wrapper, [class*="video"] { max-width: 100% !important; width: 100% !important; }
 `;
 
 function buildHtmlPage(contentHtml: string): string {
