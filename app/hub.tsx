@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   cardPressed: { opacity: 0.8 },
   cardOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(5,0,15,0.50)",
+    backgroundColor: "rgba(5,0,15,0.22)",
   },
   cardAccentBar: {
     position: "absolute",
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
     paddingTop: 12,
-    backgroundColor: "rgba(0,0,0,0.60)",
+    backgroundColor: "rgba(0,0,0,0.28)",
   },
   cardTextBlock: {
     flex: 1,
