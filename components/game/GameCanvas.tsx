@@ -445,16 +445,9 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               const ty = ry * ts;
 
               // Angel statues — rows 2–5, cols 2–3 (left) and cols 16–17 (right)
+              // Each statue is drawn once after the tile loop; here just fill background.
               if (isAngelStatueCell(ry, cx)) {
-                return (
-                  <G key={`w-${ry}-${cx}`}>
-                    <SvgImage
-                      x={angelStatueOriginX(cx) * ts} y={2 * ts}
-                      width={ts * 2} height={ts * 4}
-                      href={ANGEL_STATUE}
-                      preserveAspectRatio="xMidYMid meet" />
-                  </G>
-                );
+                return <G key={`w-${ry}-${cx}`}><Rect x={tx} y={ty} width={ts} height={ts} fill={BG_COLOR} /></G>;
               }
 
               if (cell === 1) {
@@ -578,6 +571,20 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             })
           )}
 
+          {/* ── ANGEL STATUES — drawn once each, on top of tiles ── */}
+          <SvgImage
+            x={Math.round(2 * ts)} y={Math.round(2 * ts)}
+            width={Math.round(ts * 2)} height={Math.round(ts * 4)}
+            href={ANGEL_STATUE}
+            preserveAspectRatio="xMidYMid meet"
+          />
+          <SvgImage
+            x={Math.round(16 * ts)} y={Math.round(2 * ts)}
+            width={Math.round(ts * 2)} height={Math.round(ts * 4)}
+            href={ANGEL_STATUE}
+            preserveAspectRatio="xMidYMid meet"
+          />
+
           {/* ── PUNK ENEMIES ── */}
           {punks.map((punk, i) => {
             if (punk.respawnTimer > 0) return null;
@@ -631,27 +638,34 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             const flashFrame = powered ? Math.floor(powerTimer / 6) % 2 === 0 : false;
             const isScaredSprite = powered && !flashFrame;
 
-            // ── Scared: always use the shared scared sprite with original flip logic ──
+            // ── Scared: use each character's own sprite with blue ghost wash ──
             if (isScaredSprite) {
-              // SPR_PUNK_SCARED faces RIGHT by default → flip when going left
-              const flipT = hDir < 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
+              let scaredHref: any;
+              let scaredFlip: string | undefined;
+              if (skin.useFlip) {
+                scaredHref = skin.leftSrc;
+                scaredFlip = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
+              } else {
+                scaredHref = hDir > 0 ? skin.rightSrc : skin.leftSrc;
+                scaredFlip = undefined;
+              }
               return (
-                <G key={`punk-${i}`} transform={flipT}>
+                <G key={`punk-${i}`} transform={scaredFlip} opacity={0.55}>
                   <Circle
                     cx={punk.pixelX}
                     cy={punk.pixelY}
-                    r={ts * 0.75}
-                    fill="rgba(80,120,255,0.15)"
+                    r={ts * 0.9}
+                    fill="rgba(50,100,255,0.35)"
                     stroke="#4466ff"
-                    strokeWidth={1}
-                    opacity={0.6}
+                    strokeWidth={1.5}
+                    opacity={0.85}
                   />
                   <SvgImage
                     x={punk.pixelX - pw / 2}
                     y={punk.pixelY - ph * 0.7}
                     width={pw}
                     height={ph}
-                    href={SPR_PUNK_SCARED}
+                    href={scaredHref}
                     preserveAspectRatio="xMidYMid meet"
                   />
                 </G>
