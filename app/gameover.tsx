@@ -68,7 +68,7 @@ function rankColor(rank: number): TextStyle {
 function buildShareText(score: number, level: number, username: string, rank: number | null) {
   const rankLine = rank ? `🌍 Ranked ${ordinal(rank)} WORLDWIDE` : `🌍 Level ${level} reached`;
   return (
-    `💀 I ate ${score.toLocaleString()} BRAINS as @${username} in MORE BRAINS!\n` +
+    `💀 I ate ${score.toLocaleString()} BRAINS as @${username} in BRAIN BITE!\n` +
     `${rankLine}\n` +
     `Can you beat me? 👊\n` +
     `#ReturnOfTheLivingDead #TheBrainHunter #RTLD`
@@ -419,7 +419,7 @@ export default function GameOverScreen() {
         onPress={() => router.push("/hub")}
       >
         <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
-        <Text style={styles.hubBtnText}>SEE MORE FROM RTLD</Text>
+        <Text style={styles.hubBtnText}>EXPLORE MORE →</Text>
         <FontAwesome5 name="chevron-right" size={10} color="#0a0012" />
       </Pressable>
 

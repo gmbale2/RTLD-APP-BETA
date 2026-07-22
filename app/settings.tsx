@@ -11,8 +11,13 @@ import {
   Platform,
   ActivityIndicator,
   TextStyle,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import HowToPlayModal from "@/components/game/HowToPlayModal";
+
+const PROFILE_KEY = "@more_brains:user_profile";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 
@@ -26,8 +31,8 @@ function validateUsername(v: string) {
   if (!v.trim()) return "Username is required.";
   if (v.length < 3) return "Must be at least 3 characters.";
   if (v.length > 20) return "Must be 20 characters or less.";
-  if (!/^[a-zA-Z0-9_]+$/.test(v))
-    return "Letters, numbers, and underscores only.";
+  if (!/^[a-zA-Z0-9_!@$?]+$/.test(v))
+    return "Letters, numbers, _ ! @ $ ? allowed.";
   return null;
 }
 
@@ -48,11 +53,24 @@ export default function SettingsScreen() {
   const [usernameSaving, setUsernameSaving] = useState(false);
   const [usernameSuccess, setUsernameSuccess] = useState(false);
 
+  // Email change state
+  const [newEmail, setNewEmail] = useState("");
+  const [emailErr, setEmailErr] = useState<string | null>(null);
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+
+  // How to Play modal
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+  // Delete account
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     getUser().then((u) => {
       if (u) {
         setUser(u);
         setNewUsername(u.username);
+        setNewEmail(u.email ?? "");
       }
     });
     loadSoundSettings().then(setSound);
@@ -76,7 +94,7 @@ export default function SettingsScreen() {
 
   const handleUsernameChange = async () => {
     setUsernameSuccess(false);
-    const cleaned = newUsername.trim().toLowerCase();
+    const cleaned = newUsername.trim();
     const err = validateUsername(cleaned);
     if (err) { setUsernameErr(err); return; }
     if (cleaned === user?.username) {
@@ -88,7 +106,6 @@ export default function SettingsScreen() {
     setUsernameErr(null);
 
     try {
-      // Check uniqueness against Supabase profiles table
       if (isSupabaseConfigured && supabase) {
         const { data: existing } = await supabase
           .from("profiles")
@@ -109,6 +126,76 @@ export default function SettingsScreen() {
     } finally {
       setUsernameSaving(false);
     }
+  };
+
+  // ── Email change ───────────────────────────────────────────────────────────
+
+  const handleEmailChange = async () => {
+    setEmailSuccess(false);
+    const cleaned = newEmail.trim().toLowerCase();
+    if (!cleaned) { setEmailErr("Email is required."); return; }
+    if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(cleaned)) {
+      setEmailErr("Enter a valid email address.");
+      return;
+    }
+    if (cleaned === user?.email?.toLowerCase()) {
+      setEmailErr("That's already your email.");
+      return;
+    }
+    setEmailSaving(true);
+    setEmailErr(null);
+    try {
+      if (isSupabaseConfigured && supabase) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase as any)
+          .from("profiles")
+          .update({ email: cleaned })
+          .eq("id", user?.id ?? "");
+        if (error) throw error;
+      }
+      if (user) {
+        const updated = { ...user, email: cleaned };
+        await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(updated));
+        setUser(updated);
+      }
+      setEmailSuccess(true);
+    } catch {
+      setEmailErr("Something went wrong. Try again.");
+    } finally {
+      setEmailSaving(false);
+    }
+  };
+
+  // ── Delete account ─────────────────────────────────────────────────────────
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "This will permanently delete your profile and all scores. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              if (isSupabaseConfigured && supabase && user?.id) {
+                await supabase.from("scores").delete().eq("user_id", user.id);
+                await supabase.from("profiles").delete().eq("id", user.id);
+                await supabase.auth.signOut();
+              }
+              await AsyncStorage.clear();
+              router.replace("/register");
+            } catch {
+              Alert.alert("Error", "Could not delete account. Try again.");
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -196,7 +283,7 @@ export default function SettingsScreen() {
             style={[styles.input, usernameErr ? styles.inputError : null]}
             value={newUsername}
             onChangeText={(t) => {
-              setNewUsername(t.toLowerCase());
+              setNewUsername(t);
               setUsernameErr(null);
               setUsernameSuccess(false);
             }}
@@ -232,6 +319,80 @@ export default function SettingsScreen() {
           ) : null}
         </View>
 
+        {/* ── EMAIL ─────────────────────────────────────────────────────────── */}
+        <View style={[styles.card, styles.cardPadded, { marginTop: 14 }]}>
+          <Text style={styles.fieldLabel}>CHANGE EMAIL</Text>
+          {user?.email ? (
+            <Text style={styles.currentVal}>Current: {user.email}</Text>
+          ) : null}
+          <TextInput
+            style={[styles.input, emailErr ? styles.inputError : null]}
+            value={newEmail}
+            onChangeText={(t) => { setNewEmail(t); setEmailErr(null); setEmailSuccess(false); }}
+            placeholder="new@email.com"
+            placeholderTextColor="#553366"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            returnKeyType="done"
+            onSubmitEditing={handleEmailChange}
+          />
+          {emailErr ? <Text style={styles.errText}>{emailErr}</Text> : null}
+          {emailSuccess ? <Text style={styles.successText}>✓ Email updated!</Text> : null}
+          <Pressable
+            style={({ pressed }) => [styles.btn, pressed && { opacity: 0.75 }]}
+            onPress={handleEmailChange}
+            disabled={emailSaving}
+          >
+            {emailSaving ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <Text style={styles.btnText}>SAVE EMAIL</Text>
+            )}
+          </Pressable>
+        </View>
+
+        {/* ── HOW TO PLAY ───────────────────────────────────────────────────── */}
+        <Text style={[styles.sectionLabel, { marginTop: 28 }]}>GAME HELP</Text>
+        <View style={styles.card}>
+          <Pressable
+            style={[styles.cardRow, styles.cardRowLast]}
+            onPress={() => setShowHowToPlay(true)}
+          >
+            <View style={styles.cardRowLeft}>
+              <FontAwesome5 name="question-circle" size={15} color="#cc00ff" />
+              <View>
+                <Text style={styles.cardRowTitle}>How to Play</Text>
+                <Text style={styles.cardRowSub}>Review the game tutorial</Text>
+              </View>
+            </View>
+            <FontAwesome5 name="chevron-right" size={12} color="#664477" />
+          </Pressable>
+        </View>
+
+        {/* ── DANGER ZONE ───────────────────────────────────────────────────── */}
+        <Text style={[styles.sectionLabel, { marginTop: 28 }]}>DANGER ZONE</Text>
+        <View style={styles.card}>
+          <Pressable
+            style={[styles.cardRow, styles.cardRowLast]}
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+          >
+            <View style={styles.cardRowLeft}>
+              <FontAwesome5 name="trash" size={14} color="#ff3333" />
+              <View>
+                <Text style={[styles.cardRowTitle, { color: "#ff3333" }]}>Delete Account</Text>
+                <Text style={styles.cardRowSub}>Remove your profile and all scores</Text>
+              </View>
+            </View>
+            {deleting ? (
+              <ActivityIndicator size="small" color="#ff3333" />
+            ) : (
+              <FontAwesome5 name="chevron-right" size={12} color="#664477" />
+            )}
+          </Pressable>
+        </View>
+
         {/* ── LEGAL ─────────────────────────────────────────────────────────── */}
         <Text style={[styles.sectionLabel, { marginTop: 28 }]}>LEGAL</Text>
         <View style={styles.card}>
@@ -258,9 +419,11 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
 
-        <Text style={styles.version}>MORE BRAINS · RTLD FAN APP · EARLY ACCESS</Text>
+        <Text style={styles.version}>BRAIN BITE · RTLD FAN APP · EARLY ACCESS</Text>
 
       </ScrollView>
+
+      <HowToPlayModal visible={showHowToPlay} onClose={() => setShowHowToPlay(false)} />
     </View>
   );
 }

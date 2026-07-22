@@ -40,14 +40,14 @@ function validateUsername(v: string) {
   if (!v.trim()) return "Username is required.";
   if (v.length < 3) return "Must be at least 3 characters.";
   if (v.length > 20) return "Must be 20 characters or less.";
-  if (!/^[a-zA-Z0-9_]+$/.test(v))
-    return "Letters, numbers, and underscores only.";
+  if (!/^[a-zA-Z0-9_!@$?]+$/.test(v))
+    return "Letters, numbers, _ ! @ $ ? allowed.";
   return null;
 }
 
 function validateEmail(v: string) {
   if (!v.trim()) return "Email is required.";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "Enter a valid email.";
+  if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(v)) return "Enter a valid email.";
   return null;
 }
 
@@ -136,7 +136,7 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <Text style={[styles.title, titleGlow]}>MORE BRAINS</Text>
+        <Text style={[styles.title, titleGlow]}>BRAIN BITE</Text>
         <Text style={styles.subtitle}>RETURN OF THE LIVING DEAD</Text>
 
         <View style={styles.divider} />
@@ -170,12 +170,12 @@ export default function RegisterScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>DISPLAY NAME</Text>
             <Text style={styles.hint}>
-              Public · shown on the leaderboard · letters, numbers, _ only
+              Public · shown on the leaderboard · letters, numbers, _ ! @ $ ?
             </Text>
             <TextInput
               style={[styles.input, usernameErr ? styles.inputError : null]}
               value={username}
-              onChangeText={(t) => { setUsername(t.toLowerCase()); setUsernameErr(null); }}
+              onChangeText={(t) => { setUsername(t); setUsernameErr(null); }}
               placeholder="e.g. tarman_666"
               placeholderTextColor="#553366"
               autoCapitalize="none"
@@ -243,7 +243,7 @@ export default function RegisterScreen() {
             {loading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.btnText}>ENTER THE CEMETERY</Text>
+              <Text style={styles.btnText}>START PLAYING →</Text>
             )}
           </Pressable>
 

@@ -36,6 +36,14 @@ export interface FruitState {
   timer: number;
 }
 
+export interface ScorePopup {
+  id: number;
+  x: number;
+  y: number;
+  points: number;
+  ttl: number;
+}
+
 export interface GameState {
   maze: number[][];
   player: PlayerState;
@@ -51,6 +59,7 @@ export interface GameState {
   inScatter: boolean;
   score: number;
   levelTimerTicks: number;
+  scorePopups: ScorePopup[];
   lastLevelTimeBonus: number;
   lastLevelTimeBonusRank: string;
   fruit: FruitState | null;
@@ -243,6 +252,10 @@ export class GameEngine {
   private lastLevelTimeBonus = 0;
   private lastLevelTimeBonusRank = "";
 
+  // Score popups
+  private scorePopups: ScorePopup[] = [];
+  private scorePopupId = 0;
+
   // Bonus fruit
   private fruit: FruitState | null = null;
   private fruitSpawnedFlags = [false, false]; // one flag per FRUIT_SPAWN_THRESHOLDS slot
@@ -380,6 +393,11 @@ export class GameEngine {
   // ── Main tick ──────────────────────────────────────────────────────────────
 
   tick() {
+    // Tick score popups
+    this.scorePopups = this.scorePopups
+      .map((p) => ({ ...p, ttl: p.ttl - 1 }))
+      .filter((p) => p.ttl > 0);
+
     // Level timer counts through deaths (dying costs time)
     if (this.levelTimerStarted && (this.phase === "playing" || this.phase === "dead")) {
       this.levelTimerTicks++;
@@ -798,7 +816,11 @@ export class GameEngine {
     const dy = py - this.fruit.pixelY;
     const hitPx = FRUIT_HIT_RADIUS * this.tileSize;
     if (dx * dx + dy * dy < hitPx * hitPx) {
-      this.score += this.fruit.score;
+      const fruitScore = this.fruit.score;
+      const fx = this.fruit.pixelX;
+      const fy = this.fruit.pixelY;
+      this.score += fruitScore;
+      this.scorePopups.push({ id: this.scorePopupId++, x: fx, y: fy, points: fruitScore, ttl: 70 });
       this.fruit = null;
     }
   }
@@ -826,7 +848,9 @@ export class GameEngine {
           punk.flashing = false;
           // Award doubling score: 200 → 400 → 800 → 1600
           const EAT_SCORES = [200, 400, 800, 1600];
-          this.score += EAT_SCORES[Math.min(this.punksEatenInPower, EAT_SCORES.length - 1)];
+          const eatScore = EAT_SCORES[Math.min(this.punksEatenInPower, EAT_SCORES.length - 1)];
+          this.score += eatScore;
+          this.scorePopups.push({ id: this.scorePopupId++, x: punk.pixelX, y: punk.pixelY, points: eatScore, ttl: 60 });
           this.punksEatenInPower++;
           // Start the first move toward home
           const DIRS = [{ dx: 0, dy: -1 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 1, dy: 0 }];
@@ -883,6 +907,7 @@ export class GameEngine {
       lastLevelTimeBonus: this.lastLevelTimeBonus,
       lastLevelTimeBonusRank: this.lastLevelTimeBonusRank,
       fruit: this.fruit ? { ...this.fruit } : null,
+      scorePopups: this.scorePopups.map((p) => ({ ...p })),
     };
   }
 }

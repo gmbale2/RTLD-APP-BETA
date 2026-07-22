@@ -424,7 +424,7 @@ function isCentralTombCell(r: number, c: number): boolean {
 
 // ─── Canvas ──────────────────────────────────────────────────────────────────
 export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
-  const { maze, player, punks, phase, powered, powerTimer, tileSize, fruit, level } = state;
+  const { maze, player, punks, phase, powered, powerTimer, tileSize, fruit, level, scorePopups } = state;
 
   // Skin set changes every level — cycles through all 10 sets, then repeats
   const skinSetIdx = (level - 1) % SKIN_SETS.length;
@@ -815,6 +815,29 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               />
             </G>
           )}
+
+          {/* ── Score popups ── */}
+          {scorePopups && scorePopups.map((popup) => {
+            const progress = 1 - popup.ttl / 60;
+            const opacity = popup.ttl > 20 ? 1 : popup.ttl / 20;
+            const rise = ts * 1.5 * progress;
+            return (
+              <SvgText
+                key={popup.id}
+                x={popup.x}
+                y={popup.y - rise}
+                fontSize={ts * 0.85}
+                fontWeight="bold"
+                fill="#39ff14"
+                textAnchor="middle"
+                opacity={opacity}
+                stroke="#000000"
+                strokeWidth={1}
+              >
+                +{popup.points}
+              </SvgText>
+            );
+          })}
 
         </G>
 

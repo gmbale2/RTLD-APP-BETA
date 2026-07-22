@@ -19,11 +19,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GameEngine, GameState } from "@/components/game/GameEngine";
 import { GameCanvas } from "@/components/game/GameCanvas";
 import { CemeteryBorder } from "@/components/game/CemeteryBorder";
 import { GameHUD } from "@/components/game/GameHUD";
 import { GameOverlay } from "@/components/game/GameOverlay";
+import HowToPlayModal from "@/components/game/HowToPlayModal";
 import { useSoundPlayer } from "@/hooks/useSoundPlayer";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { getUser } from "@/utils/userStorage";
@@ -39,6 +41,9 @@ export default function GameScreen() {
     });
     fetchCmsConfig().then((cfg) => {
       spinThresholdRef.current = cfg.spin_threshold;
+    });
+    AsyncStorage.getItem("howToPlaySeen").then((seen) => {
+      if (!seen) setShowHowToPlay(true);
     });
   }, []);
 
@@ -70,6 +75,7 @@ export default function GameScreen() {
   const [gameKey, setGameKey]     = useState(0);
   const engineRef                  = useRef<GameEngine | null>(null);
   const [gameState, setGameState]  = useState<GameState | null>(null);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const spinThresholdRef           = useRef<number>(DEFAULT_SPIN_THRESHOLD);
   const rafRef                     = useRef<number | null>(null);
   const deadTimerRef               = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -282,6 +288,11 @@ export default function GameScreen() {
     setGameKey((k) => k + 1);
   }, []);
 
+  const handleCloseHowToPlay = useCallback(() => {
+    setShowHowToPlay(false);
+    AsyncStorage.setItem("howToPlaySeen", "1");
+  }, []);
+
   const handleStartOrAction = useCallback(() => {
     enableAudio();
     if (engineRef.current?.getState().phase === "start") {
@@ -363,7 +374,7 @@ export default function GameScreen() {
           isWeb ? styles.titleShadowWeb : styles.titleShadowNative,
         ]}
       >
-        MORE BRAINS
+        BRAIN BITE
       </Text>
 
       <View style={[styles.mazeWrapper, { width: mazeSide, height: mazeSide }]}>
@@ -429,6 +440,8 @@ export default function GameScreen() {
           </View>
         </View>
       )}
+
+      <HowToPlayModal visible={showHowToPlay} onClose={handleCloseHowToPlay} />
     </View>
   );
 }
@@ -465,7 +478,7 @@ function FilmLogo({
         onPress={onHubPress}
       >
         <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
-        <Text style={styles.hubBtnText}>SEE MORE FROM RTLD</Text>
+        <Text style={styles.hubBtnText}>EXPLORE MORE →</Text>
         <FontAwesome5 name="chevron-right" size={10} color="#0a0012" />
       </Pressable>
     </View>
