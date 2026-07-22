@@ -55,7 +55,7 @@ export default function UpdatesScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
 
-      <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace("/hub")}>
+      <Pressable style={styles.backBtn} onPress={() => router.replace("/hub")}>
         <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
         <Text style={styles.backText}>BACK</Text>
       </Pressable>
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   backText:     { fontSize: 10, color: "#ffffff", fontFamily: "Inter_700Bold", letterSpacing: 2 },
   pageTitle:    { fontSize: 22, color: "#39ff14", fontFamily: "Inter_700Bold", letterSpacing: 3, marginBottom: 2 },
-  pageSubtitle: { fontSize: 9, color: "#1a4400", fontFamily: "Inter_700Bold", letterSpacing: 2, marginBottom: 12 },
+  pageSubtitle: { fontSize: 9, color: "#39ff14", fontFamily: "Inter_700Bold", letterSpacing: 2, marginBottom: 12, opacity: 0.6 },
   scroll:       { flex: 1, width: "100%" },
   postsList:    { gap: 14, maxWidth: 440, alignSelf: "center", width: "100%", paddingBottom: 8 },
   centerState:  { alignItems: "center", paddingVertical: 48, gap: 12 },
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   heroGradient: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.25)" },
   playOverlay:  { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
   cardBody:     { padding: 14, gap: 5 },
-  postDate:     { fontSize: 9, color: "#2a4422", fontFamily: "Inter_400Regular", letterSpacing: 1 },
+  postDate:     { fontSize: 9, color: "#5a9944", fontFamily: "Inter_400Regular", letterSpacing: 1 },
   postTitle:    { fontSize: 14, color: "#ccffcc", fontFamily: "Inter_700Bold", lineHeight: 20 },
   postExcerpt:  { fontSize: 11, color: "#446633", fontFamily: "Inter_400Regular", lineHeight: 17 },
   readMoreRow:  { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },

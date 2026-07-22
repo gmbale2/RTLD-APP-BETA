@@ -97,7 +97,7 @@ export default function RankingScreen() {
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
 
       {/* Back */}
-      <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace("/hub")}>
+      <Pressable style={styles.backBtn} onPress={() => router.replace("/hub")}>
         <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
         <Text style={styles.backText}>BACK</Text>
       </Pressable>
