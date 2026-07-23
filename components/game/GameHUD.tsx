@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, Platform, TextStyle } from "react-native";
+import { View, Text, StyleSheet, Platform, TextStyle, Pressable } from "react-native";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 interface Props {
   score: number;
@@ -9,6 +10,8 @@ interface Props {
   width: number;
   level: number;
   levelTimerTicks: number;
+  phase: string;
+  onPause: () => void;
 }
 
 function formatTime(ticks: number): string {
@@ -34,7 +37,8 @@ const timeGlowWeb: TextStyle =
     ? ({ textShadow: "0 0 8px #ffff00" } as TextStyle)
     : {};
 
-export function GameHUD({ score, lives, powered, powerTimer, width, level, levelTimerTicks }: Props) {
+export function GameHUD({ score, lives, powered, powerTimer, width, level, levelTimerTicks, phase, onPause }: Props) {
+  const canPause = phase === "playing";
   return (
     <View style={[styles.hud, { width }]}>
       <View style={styles.section}>
@@ -79,6 +83,16 @@ export function GameHUD({ score, lives, powered, powerTimer, width, level, level
           ))}
         </View>
       </View>
+
+      <View style={styles.divider} />
+
+      <Pressable
+        style={({ pressed }) => [styles.pauseBtn, !canPause && styles.pauseBtnDisabled, pressed && canPause && { opacity: 0.6 }]}
+        onPress={canPause ? onPause : undefined}
+        hitSlop={10}
+      >
+        <FontAwesome5 name={canPause ? "pause" : "stop"} size={14} color={canPause ? "#cc00ff" : "#330044"} />
+      </Pressable>
     </View>
   );
 }
@@ -197,5 +211,14 @@ const styles = StyleSheet.create({
   },
   skullEyeEmpty: {
     backgroundColor: "#220022",
+  },
+  pauseBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pauseBtnDisabled: {
+    opacity: 0.3,
   },
 });

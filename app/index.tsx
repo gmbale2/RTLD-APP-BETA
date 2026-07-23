@@ -30,6 +30,7 @@ import { useSoundPlayer } from "@/hooks/useSoundPlayer";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { getUser } from "@/utils/userStorage";
 import { fetchCmsConfig, DEFAULT_SPIN_THRESHOLD } from "@/utils/cmsConfig";
+import { getSoundSettingsSync, saveSoundSettings } from "@/utils/soundSettings";
 
 export default function GameScreen() {
   // ── Registration gate ───────────────────────────────────────────────────────
@@ -76,6 +77,7 @@ export default function GameScreen() {
   const engineRef                  = useRef<GameEngine | null>(null);
   const [gameState, setGameState]  = useState<GameState | null>(null);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [soundSettings, setSoundSettings] = useState(getSoundSettingsSync);
   const spinThresholdRef           = useRef<number>(DEFAULT_SPIN_THRESHOLD);
   const rafRef                     = useRef<number | null>(null);
   const deadTimerRef               = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -103,6 +105,29 @@ export default function GameScreen() {
     navPausedRef.current = true;
     setNavPaused(true);
   }, [pauseMusic]);
+
+  const handlePause = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    pauseMusic();
+    navPausedRef.current = true;
+    setNavPaused(true);
+  }, [pauseMusic]);
+
+  const handleToggleMusic = useCallback(async () => {
+    const next = { ...getSoundSettingsSync(), musicEnabled: !getSoundSettingsSync().musicEnabled };
+    await saveSoundSettings(next);
+    setSoundSettings({ ...next });
+    if (next.musicEnabled) resumeMusic(); else pauseMusic();
+  }, [pauseMusic, resumeMusic]);
+
+  const handleToggleSfx = useCallback(async () => {
+    const next = { ...getSoundSettingsSync(), sfxEnabled: !getSoundSettingsSync().sfxEnabled };
+    await saveSoundSettings(next);
+    setSoundSettings({ ...next });
+  }, []);
 
   const handleDirection = useCallback((dx: number, dy: number) => {
     engineRef.current?.setDirection(dx, dy);
@@ -392,15 +417,51 @@ export default function GameScreen() {
         {navPaused && gameState && (
           <View style={styles.pauseOverlay}>
             <Text style={[styles.pauseTitle, pauseTitleGlow]}>GAME PAUSED</Text>
-            <Text style={styles.pauseScore}>
-              SCORE  {gameState.score.toLocaleString()}
-            </Text>
-            <Text style={styles.pauseLevel}>LEVEL {gameState.level}</Text>
+            <Text style={styles.pauseScore}>{gameState.score.toLocaleString()} PTS · LVL {gameState.level}</Text>
+
+            {/* Resume */}
             <Pressable
               style={({ pressed }) => [styles.pauseBtn, pressed && styles.pauseBtnPressed]}
               onPress={handleResume}
             >
-              <Text style={styles.pauseBtnText}>▶  RESUME GAME</Text>
+              <FontAwesome5 name="play" size={12} color="#0a0012" solid />
+              <Text style={styles.pauseBtnText}>RESUME GAME</Text>
+            </Pressable>
+
+            {/* Restart */}
+            <Pressable
+              style={({ pressed }) => [styles.pauseBtnOutline, pressed && { opacity: 0.7 }]}
+              onPress={handleRestart}
+            >
+              <FontAwesome5 name="redo" size={11} color="#cc00ff" />
+              <Text style={styles.pauseBtnOutlineText}>RESTART</Text>
+            </Pressable>
+
+            {/* Sound toggles */}
+            <View style={styles.pauseToggles}>
+              <Pressable
+                style={[styles.pauseToggle, soundSettings.musicEnabled && styles.pauseToggleOn]}
+                onPress={handleToggleMusic}
+              >
+                <FontAwesome5 name="music" size={12} color={soundSettings.musicEnabled ? "#0a0012" : "#553366"} />
+                <Text style={[styles.pauseToggleText, soundSettings.musicEnabled && styles.pauseToggleTextOn]}>MUSIC</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.pauseToggle, soundSettings.sfxEnabled && styles.pauseToggleOn]}
+                onPress={handleToggleSfx}
+              >
+                <FontAwesome5 name="volume-up" size={12} color={soundSettings.sfxEnabled ? "#0a0012" : "#553366"} />
+                <Text style={[styles.pauseToggleText, soundSettings.sfxEnabled && styles.pauseToggleTextOn]}>SFX</Text>
+              </Pressable>
+            </View>
+
+            {/* How to play */}
+            <Pressable
+              style={styles.pauseHtp}
+              onPress={() => { setShowHowToPlay(true); }}
+            >
+              <FontAwesome5 name="question-circle" size={11} color="#664477" />
+              <Text style={styles.pauseHtpText}>HOW TO PLAY</Text>
             </Pressable>
           </View>
         )}
@@ -417,6 +478,8 @@ export default function GameScreen() {
         width={mazeSide}
         level={gameState.level}
         levelTimerTicks={gameState.levelTimerTicks}
+        phase={gameState.phase}
+        onPause={handlePause}
       />
 
       {/* Film logo + hub CTA — fills all remaining black space below HUD */}
@@ -546,30 +609,87 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginTop: 4,
   },
-  pauseLevel: {
-    fontSize: 11,
-    color: "#886699",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 2,
-  },
   pauseBtn: {
-    marginTop: 18,
-    paddingHorizontal: 24,
+    marginTop: 14,
+    paddingHorizontal: 28,
     paddingVertical: 12,
-    borderWidth: 2,
-    borderColor: "#ffffff",
     borderRadius: 4,
-    backgroundColor: "rgba(80,0,100,0.6)",
+    backgroundColor: "#cc00ff",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minWidth: 180,
+    justifyContent: "center",
   },
   pauseBtnPressed: {
-    backgroundColor: "rgba(150,0,200,0.7)",
+    opacity: 0.8,
   },
   pauseBtnText: {
-    color: "#ffffff",
+    color: "#0a0012",
     fontSize: 13,
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
-    textAlign: "center",
+  },
+  pauseBtnOutline: {
+    marginTop: 2,
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: "#cc00ff",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minWidth: 180,
+    justifyContent: "center",
+  },
+  pauseBtnOutlineText: {
+    color: "#cc00ff",
+    fontSize: 12,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 2,
+  },
+  pauseToggles: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 10,
+  },
+  pauseToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#330044",
+    backgroundColor: "rgba(20,0,35,0.6)",
+  },
+  pauseToggleOn: {
+    backgroundColor: "#39ff14",
+    borderColor: "#39ff14",
+  },
+  pauseToggleText: {
+    color: "#553366",
+    fontSize: 10,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 1.5,
+  },
+  pauseToggleTextOn: {
+    color: "#0a0012",
+  },
+  pauseHtp: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 6,
+  },
+  pauseHtpText: {
+    color: "#553366",
+    fontSize: 9,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 1.5,
   },
   logoArea: {
     alignItems: "center",
