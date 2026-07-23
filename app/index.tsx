@@ -151,6 +151,8 @@ export default function GameScreen() {
     let accumulator = 0;
 
     const loop = (now: number) => {
+      if (navPausedRef.current) return; // paused — stop ticking and rescheduling
+
       const delta = Math.min(now - lastTime, 100);
       lastTime      = now;
       accumulator  += delta;
@@ -428,15 +430,6 @@ export default function GameScreen() {
               <Text style={styles.pauseBtnText}>RESUME GAME</Text>
             </Pressable>
 
-            {/* Restart */}
-            <Pressable
-              style={({ pressed }) => [styles.pauseBtnOutline, pressed && { opacity: 0.7 }]}
-              onPress={handleRestart}
-            >
-              <FontAwesome5 name="redo" size={11} color="#cc00ff" />
-              <Text style={styles.pauseBtnOutlineText}>RESTART</Text>
-            </Pressable>
-
             {/* Sound toggles */}
             <View style={styles.pauseToggles}>
               <Pressable
@@ -627,25 +620,6 @@ const styles = StyleSheet.create({
   pauseBtnText: {
     color: "#0a0012",
     fontSize: 13,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 2,
-  },
-  pauseBtnOutline: {
-    marginTop: 2,
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: "#cc00ff",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    minWidth: 180,
-    justifyContent: "center",
-  },
-  pauseBtnOutlineText: {
-    color: "#cc00ff",
-    fontSize: 12,
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
   },

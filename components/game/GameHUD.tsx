@@ -87,11 +87,12 @@ export function GameHUD({ score, lives, powered, powerTimer, width, level, level
       <View style={styles.divider} />
 
       <Pressable
-        style={({ pressed }) => [styles.pauseBtn, !canPause && styles.pauseBtnDisabled, pressed && canPause && { opacity: 0.6 }]}
+        style={({ pressed }) => [styles.section, !canPause && styles.pauseBtnDisabled, pressed && canPause && { opacity: 0.6 }]}
         onPress={canPause ? onPause : undefined}
         hitSlop={10}
       >
-        <FontAwesome5 name={canPause ? "pause" : "stop"} size={14} color={canPause ? "#cc00ff" : "#330044"} />
+        <Text style={[styles.label, canPause && styles.labelPause]}>PAUSE</Text>
+        <FontAwesome5 name="pause" size={14} color={canPause ? "#cc00ff" : "#330044"} />
       </Pressable>
     </View>
   );
@@ -212,11 +213,8 @@ const styles = StyleSheet.create({
   skullEyeEmpty: {
     backgroundColor: "#220022",
   },
-  pauseBtn: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
+  labelPause: {
+    color: "#cc00ff",
   },
   pauseBtnDisabled: {
     opacity: 0.3,
