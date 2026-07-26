@@ -50,6 +50,17 @@ const ARTICLE_CSS = `
   .video-wrapper, [class*="video"] { max-width: 100% !important; width: 100% !important; }
 `;
 
+function fixVimeoUrls(html: string): string {
+  // Transform vimeo.com/ID → player.vimeo.com/video/ID so no sign-in is required
+  return html.replace(
+    /(<iframe[^>]+src=["'])https?:\/\/(?:www\.)?vimeo\.com\/(\d+)([^"']*)(["'])/gi,
+    "$1https://player.vimeo.com/video/$2?dnt=1$4",
+  ).replace(
+    /(<iframe[^>]+src=["'])https?:\/\/player\.vimeo\.com\/video\/(\d+)(?!\?dnt)([^"']*)(["'])/gi,
+    "$1https://player.vimeo.com/video/$2?dnt=1$3$4",
+  );
+}
+
 function buildHtmlPage(contentHtml: string): string {
   return `<!DOCTYPE html>
 <html>
@@ -58,7 +69,7 @@ function buildHtmlPage(contentHtml: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
   <style>${ARTICLE_CSS}</style>
 </head>
-<body>${contentHtml}</body>
+<body>${fixVimeoUrls(contentHtml)}</body>
 </html>`;
 }
 
@@ -114,6 +125,9 @@ export default function ArticleScreen() {
               source={{ html: htmlPage }}
               style={styles.webview}
               showsVerticalScrollIndicator={false}
+              allowsInlineMediaPlayback
+              mediaPlaybackRequiresUserAction={false}
+              allowsFullscreenVideo
             />
           );
         })()

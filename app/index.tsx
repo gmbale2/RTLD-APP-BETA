@@ -351,7 +351,9 @@ export default function GameScreen() {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
       onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
       onPanResponderGrant: () => {
         swipeHandled.current = false;
       },
@@ -565,6 +567,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0a0012",
     alignItems: "center",
+    overflow: "hidden",
   },
   title: {
     fontSize: 20,

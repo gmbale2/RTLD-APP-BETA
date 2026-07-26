@@ -45,10 +45,17 @@ export interface ShopifyProduct {
   url:            string;
 }
 
+export interface ProductsPage {
+  products: ShopifyProduct[];
+  hasNextPage: boolean;
+  endCursor: string | null;
+}
+
 const PRODUCTS_QUERY = `
-  query CollectionProducts($handle: String!, $first: Int!) {
+  query CollectionProducts($handle: String!, $first: Int!, $after: String) {
     collection(handle: $handle) {
-      products(first: $first) {
+      products(first: $first, after: $after) {
+        pageInfo { hasNextPage endCursor }
         edges {
           node {
             id
@@ -65,29 +72,39 @@ const PRODUCTS_QUERY = `
   }
 `;
 
+function mapProducts(edges: any[]): ShopifyProduct[] {
+  return edges.map(({ node }: any) => {
+    const { amount, currencyCode } = node.priceRange.minVariantPrice;
+    const cmpAmount = node.compareAtPriceRange?.minVariantPrice?.amount ?? null;
+    const onSale = cmpAmount && parseFloat(cmpAmount) > parseFloat(amount);
+    return {
+      id:             node.id,
+      title:          node.title,
+      productType:    (node.productType || "PRODUCT").toUpperCase(),
+      handle:         node.handle,
+      price:          formatMoney(amount, currencyCode),
+      compareAtPrice: onSale ? formatMoney(cmpAmount, currencyCode) : null,
+      imageUrl:       node.featuredImage?.url ?? null,
+      url:            withUTM(`https://${DOMAIN}/products/${node.handle}`, "store"),
+    };
+  });
+}
+
 export async function fetchCollectionProducts(
   handle: string,
   first = 20,
-): Promise<ShopifyProduct[]> {
+  after?: string,
+): Promise<ProductsPage> {
   try {
-    const data = await sfFetch(PRODUCTS_QUERY, { handle, first });
-    return (data?.collection?.products?.edges ?? []).map(({ node }: any) => {
-      const { amount, currencyCode } = node.priceRange.minVariantPrice;
-      const cmpAmount = node.compareAtPriceRange?.minVariantPrice?.amount ?? null;
-      const onSale = cmpAmount && parseFloat(cmpAmount) > parseFloat(amount);
-      return {
-        id:             node.id,
-        title:          node.title,
-        productType:    (node.productType || "PRODUCT").toUpperCase(),
-        handle:         node.handle,
-        price:          formatMoney(amount, currencyCode),
-        compareAtPrice: onSale ? formatMoney(cmpAmount, currencyCode) : null,
-        imageUrl:       node.featuredImage?.url ?? null,
-        url:            withUTM(`https://${DOMAIN}/products/${node.handle}`, "store"),
-      };
-    });
+    const data = await sfFetch(PRODUCTS_QUERY, { handle, first, after: after ?? null });
+    const col = data?.collection?.products;
+    return {
+      products:    mapProducts(col?.edges ?? []),
+      hasNextPage: col?.pageInfo?.hasNextPage ?? false,
+      endCursor:   col?.pageInfo?.endCursor ?? null,
+    };
   } catch {
-    return [];
+    return { products: [], hasNextPage: false, endCursor: null };
   }
 }
 

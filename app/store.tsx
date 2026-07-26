@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   TextStyle,
   Linking,
   ActivityIndicator,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
@@ -17,20 +19,47 @@ import { FontAwesome5 } from "@expo/vector-icons";
 
 import { fetchCollectionProducts, ShopifyProduct } from "@/utils/shopify";
 
-const SHOPIFY_STORE_URL = "https://returnofthelivingdead.com/collections/all-products-1";
 const COLLECTION_HANDLE = "more-brains-app";
+const PAGE_SIZE = 20;
 
 export default function StoreScreen() {
-  const insets = useSafeAreaInsets();
-  const [products, setProducts] = useState<ShopifyProduct[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const insets   = useSafeAreaInsets();
+  const [products, setProducts]       = useState<ShopifyProduct[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const cursorRef    = useRef<string | null>(null);
+  const hasMoreRef   = useRef(true);
+  const fetchingRef  = useRef(false);
 
   useEffect(() => {
-    fetchCollectionProducts(COLLECTION_HANDLE).then((p) => {
-      setProducts(p);
+    fetchCollectionProducts(COLLECTION_HANDLE, PAGE_SIZE).then((page) => {
+      setProducts(page.products);
+      cursorRef.current  = page.endCursor;
+      hasMoreRef.current = page.hasNextPage;
       setLoading(false);
     });
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (fetchingRef.current || !hasMoreRef.current) return;
+    fetchingRef.current = true;
+    setLoadingMore(true);
+    const page = await fetchCollectionProducts(COLLECTION_HANDLE, PAGE_SIZE, cursorRef.current ?? undefined);
+    setProducts((prev) => [...prev, ...page.products]);
+    cursorRef.current  = page.endCursor;
+    hasMoreRef.current = page.hasNextPage;
+    fetchingRef.current = false;
+    setLoadingMore(false);
+  }, []);
+
+  const onScroll = useCallback(
+    ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+      const nearBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 200;
+      if (nearBottom) loadMore();
+    },
+    [loadMore],
+  );
 
   const openURL = (url: string) => Linking.openURL(url).catch(() => {});
 
@@ -60,6 +89,8 @@ export default function StoreScreen() {
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.grid}
+        onScroll={onScroll}
+        scrollEventThrottle={200}
       >
         {loading ? (
           <View style={styles.loadingWrap}>
@@ -113,16 +144,12 @@ export default function StoreScreen() {
           ))
         )}
 
-        {/* Browse all */}
-        {!loading && (
-          <Pressable
-            style={({ pressed }) => [styles.browseAllBtn, pressed && { opacity: 0.75 }]}
-            onPress={() => openURL(SHOPIFY_STORE_URL)}
-          >
-            <FontAwesome5 name="shopping-bag" size={13} color="#0a0012" solid />
-            <Text style={styles.browseAllText}>BROWSE ALL PRODUCTS</Text>
-          </Pressable>
+        {loadingMore && (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator color="#00ff88" size="small" />
+          </View>
         )}
+
       </ScrollView>
 
     </View>
@@ -305,22 +332,4 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  browseAllBtn: {
-    width: "100%",
-    maxWidth: 440,
-    marginTop: 4,
-    paddingVertical: 13,
-    backgroundColor: "#00ff88",
-    borderRadius: 4,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  browseAllText: {
-    color: "#0a0012",
-    fontSize: 12,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 2,
-  },
 });
