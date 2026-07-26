@@ -129,6 +129,7 @@ export function useSoundPlayer() {
 
   const resumeMusic = useCallback(() => {
     if (!enabledRef.current) return;
+    if (!getSoundSettingsSync().musicEnabled) return;
     const mode = currentModeRef.current;
     if (mode === "gameplay") {
       ambientRef.current?.playAsync().catch(() => {});
