@@ -153,9 +153,9 @@ const styles = StyleSheet.create({
   heroGradient: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.25)" },
   playOverlay:  { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
   cardBody:     { padding: 14, gap: 5 },
-  postDate:     { fontSize: 9, color: "#5a9944", fontFamily: "Inter_400Regular", letterSpacing: 1 },
+  postDate:     { fontSize: 9, color: "#39ff14", fontFamily: "Inter_400Regular", letterSpacing: 1 },
   postTitle:    { fontSize: 14, color: "#ccffcc", fontFamily: "Inter_700Bold", lineHeight: 20 },
-  postExcerpt:  { fontSize: 11, color: "#446633", fontFamily: "Inter_400Regular", lineHeight: 17 },
+  postExcerpt:  { fontSize: 11, color: "#99cc88", fontFamily: "Inter_400Regular", lineHeight: 17 },
   readMoreRow:  { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
   readMoreText: { fontSize: 9, color: "#39ff14", fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
 });
