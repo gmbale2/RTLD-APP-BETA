@@ -97,10 +97,10 @@ export async function fetchWheelSegments(): Promise<WheelSegment[]> {
   }
 }
 
-// ── Module-level cache (60 s TTL) ────────────────────────────────────────────
+// ── Module-level cache (5 s TTL) ─────────────────────────────────────────────
 let _cached: CmsConfig | null = null;
 let _cachedAt = 0;
-const CACHE_TTL = 60_000;
+const CACHE_TTL = 5_000;
 
 export async function fetchCmsConfig(): Promise<CmsConfig> {
   if (_cached && Date.now() - _cachedAt < CACHE_TTL) return _cached;
