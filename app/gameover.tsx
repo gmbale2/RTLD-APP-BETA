@@ -355,10 +355,13 @@ export default function GameOverScreen() {
           {loading ? (
             <ActivityIndicator color="#cc00ff" size="small" />
           ) : playerRank ? (
-            <Text style={styles.rankLine}>
-              <Text style={styles.rankNum}>{ordinal(playerRank)}</Text>
-              <Text style={styles.rankSuffix}> WORLDWIDE</Text>
-            </Text>
+            <>
+              <Text style={styles.rankLabel}>YOUR GREATEST RANK OF ALL TIMES</Text>
+              <Text style={styles.rankLine}>
+                <Text style={styles.rankNum}>{ordinal(playerRank)}</Text>
+                <Text style={styles.rankSuffix}> WORLDWIDE</Text>
+              </Text>
+            </>
           ) : null}
           <Text style={styles.boardTitle}>🌍 TOP 20 LEADERBOARD</Text>
         </View>
@@ -550,6 +553,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
     gap: 2,
+  },
+  rankLabel: {
+    fontSize: 8,
+    color: "#00aa55",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 2,
+    textAlign: "center",
+    marginBottom: 2,
   },
   rankLine: {
     textAlign: "center",
