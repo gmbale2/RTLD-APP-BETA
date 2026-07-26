@@ -157,7 +157,8 @@ export default function RankingScreen() {
         <View style={styles.myRankRow}>
           <FontAwesome5 name="user" size={11} color="#cc00ff" solid />
           <Text style={styles.myRankText}>
-            YOUR RANK: <Text style={styles.myRankNum}>{ordinal(myRank)} WORLDWIDE</Text>
+            {mode === "period" ? "YOUR RANK IN THE PERIOD: " : "YOUR GREATEST RANK OF ALL TIMES: "}
+            <Text style={styles.myRankNum}>{ordinal(myRank)} WORLDWIDE</Text>
             {isMock ? "  (DEMO)" : ""}
           </Text>
         </View>
