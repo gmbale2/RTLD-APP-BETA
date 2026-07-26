@@ -42,6 +42,7 @@ export default function GameScreen() {
     });
     fetchCmsConfig().then((cfg) => {
       spinThresholdRef.current = cfg.spin_threshold;
+      prizeEnabledRef.current  = cfg.prize_enabled;
     });
     AsyncStorage.getItem("howToPlaySeen").then((seen) => {
       if (!seen) setShowHowToPlay(true);
@@ -79,6 +80,7 @@ export default function GameScreen() {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [soundSettings, setSoundSettings] = useState(getSoundSettingsSync);
   const spinThresholdRef           = useRef<number>(DEFAULT_SPIN_THRESHOLD);
+  const prizeEnabledRef            = useRef<boolean>(true);
   const rafRef                     = useRef<number | null>(null);
   const deadTimerRef               = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelTimerRef              = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -285,12 +287,17 @@ export default function GameScreen() {
   // always get the final committed values — avoids any closure staleness.
   useEffect(() => {
     if (!gameState || gameState.phase !== "gameover") return;
-    const t = setTimeout(() => {
+    const t = setTimeout(async () => {
       const finalState = engineRef.current?.getState();
       const finalScore = finalState?.score ?? gameState.score;
       const finalLevel = finalState?.level ?? gameState.level;
       const online = Platform.OS !== "web" || navigator.onLine;
-      if (finalScore >= spinThresholdRef.current && online) {
+      // Re-fetch so CMS changes (wheel on/off, threshold) apply without restarting the app
+      const cfg = await fetchCmsConfig();
+      spinThresholdRef.current = cfg.spin_threshold;
+      prizeEnabledRef.current  = cfg.prize_enabled;
+      const qualifies = finalScore >= spinThresholdRef.current && prizeEnabledRef.current;
+      if (qualifies && online) {
         router.push({
           pathname: "/spinwheel",
           params: { score: String(finalScore), level: String(finalLevel) },
@@ -301,9 +308,7 @@ export default function GameScreen() {
           params: {
             score: String(finalScore),
             level: String(finalLevel),
-            ...(finalScore >= spinThresholdRef.current && !online
-              ? { offlineWheel: "true" }
-              : {}),
+            ...(qualifies && !online ? { offlineWheel: "true" } : {}),
           },
         });
       }
