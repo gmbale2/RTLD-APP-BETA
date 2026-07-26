@@ -115,6 +115,7 @@ export async function fetchCmsConfig(): Promise<CmsConfig> {
       supabase
         .from("cms_config")
         .select("spin_threshold, prize_enabled")
+        .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
       fetchWheelSegments(),
