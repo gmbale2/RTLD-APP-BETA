@@ -57,7 +57,7 @@ export const DEFAULT_WHEEL_SEGMENTS: WheelSegment[] = [
 
 const DEFAULTS: CmsConfig = {
   spin_threshold: DEFAULT_SPIN_THRESHOLD,
-  prize_enabled:  true,
+  prize_enabled:  false,
   wheel_segments: DEFAULT_WHEEL_SEGMENTS,
 };
 
@@ -122,14 +122,17 @@ export async function fetchCmsConfig(): Promise<CmsConfig> {
     ]);
 
     const cms = cmsMaybe.data;
+    console.log("[CMS] cms_config row:", JSON.stringify(cms), "error:", cmsMaybe.error?.message);
     _cached = {
       spin_threshold: cms?.spin_threshold ?? DEFAULTS.spin_threshold,
       prize_enabled:  cms?.prize_enabled  ?? DEFAULTS.prize_enabled,
       wheel_segments: segments,
     };
+    console.log("[CMS] prize_enabled resolved to:", _cached.prize_enabled);
     _cachedAt = Date.now();
     return _cached;
-  } catch {
+  } catch (e) {
+    console.warn("[CMS] fetchCmsConfig error — using defaults:", e);
     _cached = DEFAULTS;
     return DEFAULTS;
   }
