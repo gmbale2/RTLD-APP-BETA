@@ -598,7 +598,7 @@ const styles = StyleSheet.create({
   },
   boardHeaderCell: {
     fontSize: 8,
-    color: "#553366",
+    color: "#aa88cc",
     fontFamily: "Inter_700Bold",
     letterSpacing: 1.5,
   },
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
   boardRank: {
     width: 34,
     fontSize: 11,
-    color: "#886699",
+    color: "#ccbbdd",
     fontFamily: "Inter_700Bold",
   },
   boardUsername: {
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   boardLevel: {
     width: 36,
     fontSize: 10,
-    color: "#886699",
+    color: "#ccbbdd",
     fontFamily: "Inter_400Regular",
     textAlign: "right",
   },

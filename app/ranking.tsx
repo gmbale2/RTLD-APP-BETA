@@ -111,7 +111,7 @@ export default function RankingScreen() {
           style={[styles.toggleBtn, mode === "period" && styles.toggleBtnActive]}
           onPress={() => setMode("period")}
         >
-          <FontAwesome5 name="calendar-alt" size={9} color={mode === "period" ? "#0a0012" : "#886699"} solid />
+          <FontAwesome5 name="calendar-alt" size={9} color={mode === "period" ? "#0a0012" : "#ccbbdd"} solid />
           <Text style={[styles.toggleBtnText, mode === "period" && styles.toggleBtnTextActive]}>
             CURRENT PERIOD
           </Text>
@@ -120,7 +120,7 @@ export default function RankingScreen() {
           style={[styles.toggleBtn, mode === "alltime" && styles.toggleBtnActive]}
           onPress={() => setMode("alltime")}
         >
-          <FontAwesome5 name="trophy" size={9} color={mode === "alltime" ? "#0a0012" : "#886699"} solid />
+          <FontAwesome5 name="trophy" size={9} color={mode === "alltime" ? "#0a0012" : "#ccbbdd"} solid />
           <Text style={[styles.toggleBtnText, mode === "alltime" && styles.toggleBtnTextActive]}>
             ALL TIME
           </Text>
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   toggleBtnActive:     { backgroundColor: "#cc00ff" },
-  toggleBtnText:       { fontSize: 9, color: "#886699", fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
+  toggleBtnText:       { fontSize: 9, color: "#ccbbdd", fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
   toggleBtnTextActive: { color: "#0a0012" },
 
   prizeBanner: {
@@ -311,10 +311,10 @@ const styles = StyleSheet.create({
   prizeBadge:   { fontSize: 8, color: "#FFD700", fontFamily: "Inter_700Bold", letterSpacing: 2 },
   prizeName:    { fontSize: 14, color: "#ffffff", fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
   prizeValue:   { fontSize: 11, color: "#FFD700", fontFamily: "Inter_700Bold" },
-  prizeStart:   { fontSize: 8, color: "#665500", fontFamily: "Inter_400Regular", marginTop: 2 },
+  prizeStart:   { fontSize: 8, color: "#ccaa00", fontFamily: "Inter_400Regular", marginTop: 2 },
   prizeRight:   { alignItems: "center", gap: 4, paddingLeft: 12 },
   prizeEmoji:   { fontSize: 32 },
-  prizeDeadline: { fontSize: 8, color: "#886600", fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 90 },
+  prizeDeadline: { fontSize: 8, color: "#ccaa00", fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 90 },
 
   honourBanner: {
     width: "100%",
@@ -344,15 +344,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     alignSelf: "flex-start",
   },
-  myRankText: { fontSize: 10, color: "#886699", fontFamily: "Inter_400Regular", letterSpacing: 1 },
+  myRankText: { fontSize: 10, color: "#ccbbdd", fontFamily: "Inter_400Regular", letterSpacing: 1 },
   myRankNum:  { color: "#cc00ff", fontFamily: "Inter_700Bold" },
   mockNote:   { fontSize: 9, color: "#442233", fontFamily: "Inter_400Regular", alignSelf: "flex-start", marginBottom: 6 },
 
   boardWrap:  { width: "100%", maxWidth: 440 },
   boardLabel: { fontSize: 10, color: "#cc00ff", fontFamily: "Inter_700Bold", letterSpacing: 2, textAlign: "center", marginBottom: 8 },
   boardLoading: { alignItems: "center", paddingVertical: 40, gap: 10 },
-  loadingText:  { fontSize: 10, color: "#553366", fontFamily: "Inter_700Bold", letterSpacing: 1 },
-  emptyText:    { fontSize: 12, color: "#553366", fontFamily: "Inter_400Regular", textAlign: "center", marginTop: 8, lineHeight: 18 },
+  loadingText:  { fontSize: 10, color: "#aa88cc", fontFamily: "Inter_700Bold", letterSpacing: 1 },
+  emptyText:    { fontSize: 12, color: "#aa88cc", fontFamily: "Inter_400Regular", textAlign: "center", marginTop: 8, lineHeight: 18 },
 
   headerRow: {
     flexDirection: "row",
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#330044",
     marginBottom: 2,
   },
-  headerCell: { fontSize: 8, color: "#553366", fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
+  headerCell: { fontSize: 8, color: "#aa88cc", fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
 
   row: {
     flexDirection: "row",
@@ -378,11 +378,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#7700aa",
   },
-  cellRank:        { width: 38, fontSize: 12, color: "#886699", fontFamily: "Inter_700Bold" },
+  cellRank:        { width: 38, fontSize: 12, color: "#ccbbdd", fontFamily: "Inter_700Bold" },
   cellUser:        { fontSize: 12, color: "#ccaadd", fontFamily: "Inter_400Regular" },
-  cellDisplayName: { fontSize: 9, color: "#553366", fontFamily: "Inter_400Regular", marginTop: 1 },
+  cellDisplayName: { fontSize: 9, color: "#aa88cc", fontFamily: "Inter_400Regular", marginTop: 1 },
   cellScore:       { width: 90, fontSize: 12, color: "#ccaadd", fontFamily: "Inter_700Bold", textAlign: "right" },
-  cellLevel:       { width: 44, fontSize: 11, color: "#886699", fontFamily: "Inter_400Regular", textAlign: "right" },
+  cellLevel:       { width: 44, fontSize: 11, color: "#ccbbdd", fontFamily: "Inter_400Regular", textAlign: "right" },
   cellMe:          { color: "#ffffff", fontFamily: "Inter_700Bold" },
 
   playBtn: {

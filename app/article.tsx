@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   notFoundText: {
-    color: "#446633",
+    color: "#99cc88",
     fontFamily: "Inter_400Regular",
     fontSize: 14,
   },

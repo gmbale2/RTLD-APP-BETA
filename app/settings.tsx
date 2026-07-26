@@ -238,7 +238,7 @@ export default function SettingsScreen() {
                 <Text style={styles.cardRowSub}>Manage what you hear from us</Text>
               </View>
             </View>
-            <FontAwesome5 name="chevron-right" size={12} color="#664477" />
+            <FontAwesome5 name="chevron-right" size={12} color="#aa88cc" />
           </Pressable>
         </View>
 
@@ -366,7 +366,7 @@ export default function SettingsScreen() {
                 <Text style={styles.cardRowSub}>Review the game tutorial</Text>
               </View>
             </View>
-            <FontAwesome5 name="chevron-right" size={12} color="#664477" />
+            <FontAwesome5 name="chevron-right" size={12} color="#aa88cc" />
           </Pressable>
         </View>
 
@@ -388,7 +388,7 @@ export default function SettingsScreen() {
             {deleting ? (
               <ActivityIndicator size="small" color="#ff3333" />
             ) : (
-              <FontAwesome5 name="chevron-right" size={12} color="#664477" />
+              <FontAwesome5 name="chevron-right" size={12} color="#aa88cc" />
             )}
           </Pressable>
         </View>
@@ -401,10 +401,10 @@ export default function SettingsScreen() {
             onPress={() => Linking.openURL("https://rtld-app.com/privacy")}
           >
             <View style={styles.cardRowLeft}>
-              <FontAwesome5 name="shield-alt" size={14} color="#664477" />
+              <FontAwesome5 name="shield-alt" size={14} color="#aa88cc" />
               <Text style={styles.cardRowTitle}>Privacy Policy</Text>
             </View>
-            <FontAwesome5 name="external-link-alt" size={11} color="#664477" />
+            <FontAwesome5 name="external-link-alt" size={11} color="#aa88cc" />
           </Pressable>
           <View style={styles.cardSep} />
           <Pressable
@@ -412,10 +412,10 @@ export default function SettingsScreen() {
             onPress={() => Linking.openURL("https://rtld-app.com/terms")}
           >
             <View style={styles.cardRowLeft}>
-              <FontAwesome5 name="file-alt" size={14} color="#664477" />
+              <FontAwesome5 name="file-alt" size={14} color="#aa88cc" />
               <Text style={styles.cardRowTitle}>Terms of Service</Text>
             </View>
-            <FontAwesome5 name="external-link-alt" size={11} color="#664477" />
+            <FontAwesome5 name="external-link-alt" size={11} color="#aa88cc" />
           </Pressable>
         </View>
 
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
 
   sectionLabel: {
     fontSize: 9,
-    color: "#664477",
+    color: "#aa88cc",
     fontFamily: "Inter_700Bold",
     letterSpacing: 3,
     marginBottom: 8,
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   },
   cardRowSub: {
     fontSize: 10,
-    color: "#664477",
+    color: "#ccbbdd",
     fontFamily: "Inter_400Regular",
     marginTop: 1,
   },
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   currentVal: {
     fontSize: 11,
-    color: "#664477",
+    color: "#ccbbdd",
     fontFamily: "Inter_400Regular",
   },
   input: {
@@ -593,14 +593,14 @@ const styles = StyleSheet.create({
   },
   prevNote: {
     fontSize: 9,
-    color: "#443355",
+    color: "#9977bb",
     fontFamily: "Inter_400Regular",
   },
 
   version: {
     marginTop: 32,
     fontSize: 9,
-    color: "#2a0040",
+    color: "#664477",
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
     textAlign: "center",

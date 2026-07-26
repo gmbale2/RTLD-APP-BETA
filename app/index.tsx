@@ -437,14 +437,14 @@ export default function GameScreen() {
                 style={[styles.pauseToggle, soundSettings.musicEnabled && styles.pauseToggleOn]}
                 onPress={handleToggleMusic}
               >
-                <FontAwesome5 name="music" size={12} color={soundSettings.musicEnabled ? "#0a0012" : "#553366"} />
+                <FontAwesome5 name="music" size={12} color={soundSettings.musicEnabled ? "#0a0012" : "#9977bb"} />
                 <Text style={[styles.pauseToggleText, soundSettings.musicEnabled && styles.pauseToggleTextOn]}>MUSIC</Text>
               </Pressable>
               <Pressable
                 style={[styles.pauseToggle, soundSettings.sfxEnabled && styles.pauseToggleOn]}
                 onPress={handleToggleSfx}
               >
-                <FontAwesome5 name="volume-up" size={12} color={soundSettings.sfxEnabled ? "#0a0012" : "#553366"} />
+                <FontAwesome5 name="volume-up" size={12} color={soundSettings.sfxEnabled ? "#0a0012" : "#9977bb"} />
                 <Text style={[styles.pauseToggleText, soundSettings.sfxEnabled && styles.pauseToggleTextOn]}>SFX</Text>
               </Pressable>
             </View>
@@ -454,7 +454,7 @@ export default function GameScreen() {
               style={styles.pauseHtp}
               onPress={() => { setShowHowToPlay(true); }}
             >
-              <FontAwesome5 name="question-circle" size={11} color="#664477" />
+              <FontAwesome5 name="question-circle" size={11} color="#aa88cc" />
               <Text style={styles.pauseHtpText}>HOW TO PLAY</Text>
             </Pressable>
           </View>
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
     borderColor: "#39ff14",
   },
   pauseToggleText: {
-    color: "#553366",
+    color: "#9977bb",
     fontSize: 10,
     fontFamily: "Inter_700Bold",
     letterSpacing: 1.5,
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   pauseHtpText: {
-    color: "#553366",
+    color: "#9977bb",
     fontSize: 9,
     fontFamily: "Inter_700Bold",
     letterSpacing: 1.5,

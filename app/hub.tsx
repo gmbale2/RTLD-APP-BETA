@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 9,
-    color: "#664477",
+    color: "#aa88cc",
     fontFamily: "Inter_700Bold",
     letterSpacing: 3,
     textAlign: "center",

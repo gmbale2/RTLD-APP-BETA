@@ -99,7 +99,7 @@ export default function StoreScreen() {
           </View>
         ) : products.length === 0 ? (
           <View style={styles.loadingWrap}>
-            <FontAwesome5 name="store-slash" size={32} color="#224433" />
+            <FontAwesome5 name="store-slash" size={32} color="#88bb88" />
             <Text style={styles.loadingText}>NO PRODUCTS AVAILABLE</Text>
           </View>
         ) : (
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   pageSubtitle: {
     fontSize: 9,
-    color: "#004422",
+    color: "#00aa55",
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
     marginBottom: 8,
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   noticeText: {
     flex: 1,
     fontSize: 10,
-    color: "#336644",
+    color: "#88cc99",
     fontFamily: "Inter_400Regular",
     lineHeight: 14,
   },
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 10,
-    color: "#224433",
+    color: "#88bb88",
     fontFamily: "Inter_700Bold",
     letterSpacing: 1.5,
   },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
 
   productType: {
     fontSize: 7,
-    color: "#006633",
+    color: "#00cc66",
     fontFamily: "Inter_700Bold",
     letterSpacing: 1.5,
   },

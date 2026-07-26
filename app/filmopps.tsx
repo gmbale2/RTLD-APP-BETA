@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
 
   priceRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   productPrice:  { fontSize: 14, color: ACCENT, fontFamily: "Inter_700Bold" },
-  originalPrice: { fontSize: 10, color: "#553366", fontFamily: "Inter_400Regular", textDecorationLine: "line-through" },
+  originalPrice: { fontSize: 10, color: "#886699", fontFamily: "Inter_400Regular", textDecorationLine: "line-through" },
 
   viewBtn: {
     width: "100%",

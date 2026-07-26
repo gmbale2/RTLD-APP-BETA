@@ -164,7 +164,7 @@ export default function NotificationsScreen() {
       {/* Back button (settings mode only) */}
       {fromSettings ? (
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <FontAwesome5 name="arrow-left" size={12} color="#664477" />
+          <FontAwesome5 name="arrow-left" size={12} color="#aa88cc" />
           <Text style={styles.backText}>BACK</Text>
         </Pressable>
       ) : null}
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   prefSub: {
     fontSize: 9,
-    color: "#553366",
+    color: "#aa88cc",
     fontFamily: "Inter_400Regular",
     marginTop: 2,
     lineHeight: 13,
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 10,
-    color: "#664477",
+    color: "#aa88cc",
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   skipBtn:  { paddingVertical: 8, marginBottom: 12 },
   skipText: {
     fontSize: 12,
-    color: "#553366",
+    color: "#aa88cc",
     fontFamily: "Inter_400Regular",
     textDecorationLine: "underline",
   },

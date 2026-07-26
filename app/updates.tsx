@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   postsList:    { gap: 14, maxWidth: 440, alignSelf: "center", width: "100%", paddingBottom: 8 },
   centerState:  { alignItems: "center", paddingVertical: 48, gap: 12 },
   emptyEmoji:   { fontSize: 36 },
-  stateText:    { fontSize: 10, color: "#1a2200", fontFamily: "Inter_700Bold", letterSpacing: 1 },
+  stateText:    { fontSize: 10, color: "#99cc66", fontFamily: "Inter_700Bold", letterSpacing: 1 },
   card:         { width: "100%", backgroundColor: "rgba(5,20,0,0.9)", borderWidth: 1.5, borderColor: "#1a2200", borderRadius: 12, overflow: "hidden" },
   cardPressed:  { opacity: 0.75 },
   heroArea:     { width: "100%", height: 170, backgroundColor: "#020a00", overflow: "hidden" },
