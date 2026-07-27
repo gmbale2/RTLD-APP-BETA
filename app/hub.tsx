@@ -93,8 +93,8 @@ export default function HubScreen() {
   const [filmThumb, setFilmThumb] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCollectionProducts("new-movie-opportunities", 1).then((products) => {
-      if (products[0]?.imageUrl) setFilmThumb(products[0].imageUrl);
+    fetchCollectionProducts("new-movie-opportunities", 1).then((page) => {
+      if (page.products[0]?.imageUrl) setFilmThumb(page.products[0].imageUrl);
     });
   }, []);
 

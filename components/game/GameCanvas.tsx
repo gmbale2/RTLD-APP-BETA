@@ -428,7 +428,13 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
 
   // Skin set changes every level — cycles through all 10 sets, then repeats
   const skinSetIdx = (level - 1) % SKIN_SETS.length;
-  const ts = tileSize;
+  // Derive ts from the canvas size prop, not from state.tileSize.
+  // state.tileSize can lag one frame behind size on mobile when safe-area
+  // insets update, causing a transient mismatch that misaligns tiles and sprites.
+  const ts = Math.floor(size / 20);
+  // Scale factor converts engine pixel coords (computed with state.tileSize)
+  // to canvas pixel coords (based on ts). Equals 1.0 during normal gameplay.
+  const tsScale = tileSize > 0 ? ts / tileSize : 1;
   const actualSize = ts * 20;
   const ox = Math.floor((size - actualSize) / 2);
   const oy = Math.floor((size - actualSize) / 2);
@@ -454,7 +460,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
         {/* Background */}
         <Rect width={size} height={size} fill={BG_COLOR} />
 
-        <G x={ox} y={oy}>
+        <G transform={`translate(${ox}, ${oy})`}>
 
           {/* ── MAZE TILES ── */}
           {maze.map((row, ry) =>
@@ -607,6 +613,10 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
           {punks.map((punk, i) => {
             if (punk.respawnTimer > 0) return null;
 
+            // Scale engine pixel coords to match current canvas ts
+            const px = punk.pixelX * tsScale;
+            const py = punk.pixelY * tsScale;
+
             // Maintain last horizontal direction so sprite doesn't snap on vertical moves
             const hDir = punk.dirX !== 0 ? punk.dirX : punk.lastDirX;
 
@@ -621,7 +631,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               let ghFlip: string | undefined;
               if (skin.useFlip) {
                 ghHref = skin.leftSrc;
-                ghFlip = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
+                ghFlip = hDir > 0 ? `translate(${px * 2}, 0) scale(-1, 1)` : undefined;
               } else {
                 ghHref = hDir > 0 ? skin.rightSrc : skin.leftSrc;
                 ghFlip = undefined;
@@ -630,16 +640,16 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
                 <G key={`punk-${i}`} opacity={0.45} transform={ghFlip}>
                   {/* Speed-trail glow */}
                   <Circle
-                    cx={punk.pixelX}
-                    cy={punk.pixelY}
+                    cx={px}
+                    cy={py}
                     r={ts * 0.35}
                     fill="rgba(255,68,170,0.18)"
                     stroke="#ff44aa"
                     strokeWidth={0.8}
                   />
                   <SvgImage
-                    x={punk.pixelX - ghW / 2}
-                    y={punk.pixelY - ghH * 0.7}
+                    x={px - ghW / 2}
+                    y={py - ghH * 0.7}
                     width={ghW}
                     height={ghH}
                     href={ghHref}
@@ -662,7 +672,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               let ghostFlip: string | undefined;
               if (skin.useFlip) {
                 ghostHref = skin.ghostLeftSrc;
-                ghostFlip = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
+                ghostFlip = hDir > 0 ? `translate(${px * 2}, 0) scale(-1, 1)` : undefined;
               } else {
                 ghostHref = hDir > 0 ? skin.ghostRightSrc : skin.ghostLeftSrc;
                 ghostFlip = undefined;
@@ -670,8 +680,8 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               return (
                 <G key={`punk-${i}`} transform={ghostFlip}>
                   <Circle
-                    cx={punk.pixelX}
-                    cy={punk.pixelY}
+                    cx={px}
+                    cy={py}
                     r={ts * 0.75}
                     fill="rgba(80,120,255,0.15)"
                     stroke="#4466ff"
@@ -679,8 +689,8 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
                     opacity={0.6}
                   />
                   <SvgImage
-                    x={punk.pixelX - pw / 2}
-                    y={punk.pixelY - ph * 0.7}
+                    x={px - pw / 2}
+                    y={py - ph * 0.7}
                     width={pw}
                     height={ph}
                     href={ghostHref}
@@ -696,7 +706,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             if (skin.useFlip) {
               // Original sprites face LEFT — mirror for east-facing
               href  = skin.leftSrc;
-              flipT = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
+              flipT = hDir > 0 ? `translate(${px * 2}, 0) scale(-1, 1)` : undefined;
             } else {
               // New directional sprites — pick left or right source directly, no transform
               href  = hDir > 0 ? skin.rightSrc : skin.leftSrc;
@@ -705,8 +715,8 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             return (
               <G key={`punk-${i}`} transform={flipT}>
                 <SvgImage
-                  x={punk.pixelX - pw / 2}
-                  y={punk.pixelY - ph * 0.7}
+                  x={px - pw / 2}
+                  y={py - ph * 0.7}
                   width={pw}
                   height={ph}
                   href={href}
@@ -718,7 +728,8 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
 
           {/* ── BONUS FRUIT ── */}
           {fruit && (() => {
-            // Gentle pulsing glow that fades out in the last 3 seconds
+            const fpx = fruit.pixelX * tsScale;
+            const fpy = fruit.pixelY * tsScale;
             const fadeFactor = fruit.timer < 90 ? fruit.timer / 90 : 1;
             const glowPulse  = Math.abs(Math.sin((fruit.timer / 20) * Math.PI));
             const fruitFontSize = ts * 1.1;
@@ -726,8 +737,8 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               <G key="fruit">
                 {/* Outer glow ring */}
                 <Circle
-                  cx={fruit.pixelX}
-                  cy={fruit.pixelY}
+                  cx={fpx}
+                  cy={fpy}
                   r={ts * (0.7 + glowPulse * 0.15)}
                   fill={`rgba(255,215,0,${0.12 * fadeFactor})`}
                   stroke={`rgba(255,200,50,${0.55 * fadeFactor})`}
@@ -735,8 +746,8 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
                 />
                 {/* Emoji label */}
                 <SvgText
-                  x={fruit.pixelX}
-                  y={fruit.pixelY + fruitFontSize * 0.38}
+                  x={fpx}
+                  y={fpy + fruitFontSize * 0.38}
                   fontSize={fruitFontSize}
                   textAnchor="middle"
                   opacity={fadeFactor}
@@ -748,72 +759,77 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
           })()}
 
           {/* ── TARMAN (player) ── */}
-          {phase === "dead" ? (
-            // Death explosion rings
-            <G>
-              <Circle cx={player.pixelX} cy={player.pixelY} r={ts * 0.85}
-                fill="#ff2200" opacity={0.88} />
-              <Circle cx={player.pixelX} cy={player.pixelY} r={ts * 0.58}
-                fill="#ff8800" opacity={0.75} />
-              <Circle cx={player.pixelX} cy={player.pixelY} r={ts * 0.32}
-                fill="#ffff00" opacity={0.6} />
-            </G>
-          ) : (
-            <G>
-              {/* ── Powered: layered pulsing green shimmer ── */}
-              {powered && (
-                <>
-                  {/* Outermost wide glow wash */}
-                  <Ellipse
-                    cx={player.pixelX} cy={player.pixelY}
-                    rx={skullW * (0.9 + pulse * 0.22)}
-                    ry={skullH * (0.72 + pulse * 0.18)}
-                    fill={`rgba(0,255,100,${0.08 + pulse * 0.1})`}
-                  />
-                  {/* Mid pulse ring */}
-                  <Circle
-                    cx={player.pixelX} cy={player.pixelY}
-                    r={skullW * (0.68 + pulse * 0.14)}
-                    fill="none"
-                    stroke="#00ff88"
-                    strokeWidth={2.5 + pulse * 1.5}
-                    opacity={0.55 + pulse * 0.35}
-                  />
-                  {/* Tight inner ring */}
-                  <Circle
-                    cx={player.pixelX} cy={player.pixelY}
-                    r={skullW * (0.5 + pulse * 0.06)}
-                    fill={`rgba(0,255,60,${0.12 + pulse * 0.14})`}
-                    stroke="#44ffaa"
-                    strokeWidth={1.2}
-                    opacity={0.7 + pulse * 0.3}
-                  />
-                  {/* Corner sparkles — 4 small bright dots */}
-                  {[0, 90, 180, 270].map((angle) => {
-                    const rad = (angle + powerTimer * 3) * (Math.PI / 180);
-                    const dist = skullW * (0.62 + pulse * 0.1);
-                    return (
-                      <Circle
-                        key={`sp${angle}`}
-                        cx={player.pixelX + Math.cos(rad) * dist}
-                        cy={player.pixelY + Math.sin(rad) * dist}
-                        r={2 + pulse * 2.5}
-                        fill="#aaff66"
-                        opacity={0.6 + pulse * 0.4}
-                      />
-                    );
-                  })}
-                </>
-              )}
-              <SvgImage
-                x={player.pixelX - skullW / 2}
-                y={player.pixelY - skullH / 2}
-                width={skullW}
-                height={skullH}
-                href={SPR_TARMAN}
-                preserveAspectRatio="xMidYMid meet"
-              />
-            </G>
+          {(() => {
+            const ppx = player.pixelX * tsScale;
+            const ppy = player.pixelY * tsScale;
+            return phase === "dead" ? (
+              // Death explosion rings
+              <G>
+                <Circle cx={ppx} cy={ppy} r={ts * 0.85}
+                  fill="#ff2200" opacity={0.88} />
+                <Circle cx={ppx} cy={ppy} r={ts * 0.58}
+                  fill="#ff8800" opacity={0.75} />
+                <Circle cx={ppx} cy={ppy} r={ts * 0.32}
+                  fill="#ffff00" opacity={0.6} />
+              </G>
+            ) : (
+              <G>
+                {/* ── Powered: layered pulsing green shimmer ── */}
+                {powered && (
+                  <>
+                    {/* Outermost wide glow wash */}
+                    <Ellipse
+                      cx={ppx} cy={ppy}
+                      rx={skullW * (0.9 + pulse * 0.22)}
+                      ry={skullH * (0.72 + pulse * 0.18)}
+                      fill={`rgba(0,255,100,${0.08 + pulse * 0.1})`}
+                    />
+                    {/* Mid pulse ring */}
+                    <Circle
+                      cx={ppx} cy={ppy}
+                      r={skullW * (0.68 + pulse * 0.14)}
+                      fill="none"
+                      stroke="#00ff88"
+                      strokeWidth={2.5 + pulse * 1.5}
+                      opacity={0.55 + pulse * 0.35}
+                    />
+                    {/* Tight inner ring */}
+                    <Circle
+                      cx={ppx} cy={ppy}
+                      r={skullW * (0.5 + pulse * 0.06)}
+                      fill={`rgba(0,255,60,${0.12 + pulse * 0.14})`}
+                      stroke="#44ffaa"
+                      strokeWidth={1.2}
+                      opacity={0.7 + pulse * 0.3}
+                    />
+                    {/* Corner sparkles — 4 small bright dots */}
+                    {[0, 90, 180, 270].map((angle) => {
+                      const rad = (angle + powerTimer * 3) * (Math.PI / 180);
+                      const dist = skullW * (0.62 + pulse * 0.1);
+                      return (
+                        <Circle
+                          key={`sp${angle}`}
+                          cx={ppx + Math.cos(rad) * dist}
+                          cy={ppy + Math.sin(rad) * dist}
+                          r={2 + pulse * 2.5}
+                          fill="#aaff66"
+                          opacity={0.6 + pulse * 0.4}
+                        />
+                      );
+                    })}
+                  </>
+                )}
+                <SvgImage
+                  x={ppx - skullW / 2}
+                  y={ppy - skullH / 2}
+                  width={skullW}
+                  height={skullH}
+                  href={SPR_TARMAN}
+                  preserveAspectRatio="xMidYMid meet"
+                />
+              </G>
+            );
+          })()}
           )}
 
           {/* ── Score popups ── */}
@@ -824,8 +840,8 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             return (
               <SvgText
                 key={popup.id}
-                x={popup.x}
-                y={popup.y - rise}
+                x={popup.x * tsScale}
+                y={popup.y * tsScale - rise}
                 fontSize={ts * 0.85}
                 fontWeight="bold"
                 fill="#39ff14"

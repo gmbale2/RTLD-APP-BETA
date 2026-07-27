@@ -33,7 +33,7 @@ export default function FilmOppsScreen() {
 
   useEffect(() => {
     fetchCollectionProducts(COLLECTION_HANDLE).then((p) => {
-      setProducts(p);
+      setProducts(p.products);
       setLoading(false);
     });
   }, []);

@@ -158,7 +158,7 @@ export default function ExclusiveScreen() {
             <Pressable
               key={video.id}
               style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-              onPress={() => setActiveId(video.id)}
+              onPress={() => { if (meta) setActiveId(video.id); }}
             >
               <View style={styles.thumbArea}>
                 {!loaded ? (
@@ -178,9 +178,11 @@ export default function ExclusiveScreen() {
                   <View style={styles.thumbPlaceholder} />
                 )}
 
-                <View style={styles.playBtn}>
-                  <FontAwesome5 name="play-circle" size={48} color="rgba(255,255,255,0.92)" solid />
-                </View>
+                {(!loaded || meta) && (
+                  <View style={styles.playBtn}>
+                    <FontAwesome5 name="play-circle" size={48} color="rgba(255,255,255,0.92)" solid />
+                  </View>
+                )}
 
                 {meta && meta.duration > 0 && (
                   <View style={styles.durationBadge}>

@@ -5,7 +5,6 @@ import React, {
   useState,
 } from "react";
 import {
-  Dimensions,
   Image,
   PanResponder,
   Platform,
@@ -14,6 +13,7 @@ import {
   Text,
   TextStyle,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -50,7 +50,7 @@ export default function GameScreen() {
   }, []);
 
   const insets = useSafeAreaInsets();
-  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
 
   const topPad    = isWeb ? 4  : insets.top;
