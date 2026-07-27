@@ -571,18 +571,18 @@ function DPadBtn({
   size: number; iconSz: number;
   onDirection: (dx: number, dy: number) => void;
 }) {
+  const [isPressed, setIsPressed] = React.useState(false);
   return (
-    <Pressable
-      style={({ pressed }) => [
-        dpadStyles.btn,
-        { width: size, height: size },
-        pressed && dpadStyles.btnPressed,
-      ]}
-      onPressIn={() => onDirection(dx, dy)}
-      hitSlop={14}
+    <View
+      style={[dpadStyles.btn, { width: size, height: size }, isPressed && dpadStyles.btnPressed]}
+      onStartShouldSetResponder={() => true}
+      onResponderGrant={() => { onDirection(dx, dy); setIsPressed(true); }}
+      onResponderRelease={() => setIsPressed(false)}
+      onResponderTerminate={() => setIsPressed(false)}
+      hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
     >
       <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
-    </Pressable>
+    </View>
   );
 }
 

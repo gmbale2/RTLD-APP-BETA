@@ -617,10 +617,12 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             // web needs transform string (matrix[] prop not applied as SVG transform on web).
             const needsFlip = skin.useFlip && hDir > 0;
             const flipKey = needsFlip ? "f" : "n";
+            // Web: transform string. Native: individual scaleX/originX props
+            // (more reliable than matrix[] for in-place updates each frame).
             const flipProps = needsFlip
               ? (Platform.OS === "web"
                   ? { transform: `matrix(-1, 0, 0, 1, ${punk.pixelX * 2}, 0)` }
-                  : { matrix: [-1, 0, 0, 1, punk.pixelX * 2, 0] as [number,number,number,number,number,number] })
+                  : { scaleX: -1 as const, originX: punk.pixelX })
               : {};
 
             // ── "Going home" — eaten punk rushing to spawn: tiny faint sprite ──
