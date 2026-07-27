@@ -89,6 +89,9 @@ export default function GameScreen() {
   const deadTimerRef               = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelTimerRef              = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelRestartTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mazeReadyTimerRef          = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mazeReady, setMazeReady]  = useState(false);
+  const mazeReadyRef               = useRef(false);
 
   // ── Nav-pause support ────────────────────────────────────────────────────────
   // Stores the loop fn so useFocusEffect can restart it without re-mounting
@@ -172,6 +175,15 @@ export default function GameScreen() {
     engineRef.current = engine;
     setGameState({ ...engine.getState() });
 
+    // Block start until sprites have decoded (canvas renders top-to-bottom on first paint)
+    mazeReadyRef.current = false;
+    setMazeReady(false);
+    if (mazeReadyTimerRef.current) clearTimeout(mazeReadyTimerRef.current);
+    mazeReadyTimerRef.current = setTimeout(() => {
+      mazeReadyRef.current = true;
+      setMazeReady(true);
+    }, 900);
+
     const TICK_MS   = 33;
     let lastTime    = performance.now();
     let accumulator = 0;
@@ -229,8 +241,16 @@ export default function GameScreen() {
           levelTimerRef.current = setTimeout(() => {
             const e = engineRef.current;
             if (!e) return;
+            // Hide maze until new level sprites finish decoding
+            mazeReadyRef.current = false;
+            setMazeReady(false);
+            if (mazeReadyTimerRef.current) clearTimeout(mazeReadyTimerRef.current);
             e.levelUp();
             setGameState({ ...e.getState() });
+            mazeReadyTimerRef.current = setTimeout(() => {
+              mazeReadyRef.current = true;
+              setMazeReady(true);
+            }, 900);
 
             // Wait 2 animation frames so React paints the new full maze
             // before the game loop (and input) can advance the engine again
@@ -266,6 +286,7 @@ export default function GameScreen() {
       if (deadTimerRef.current)           clearTimeout(deadTimerRef.current);
       if (levelTimerRef.current)          clearTimeout(levelTimerRef.current);
       if (levelRestartTimerRef.current)   clearTimeout(levelRestartTimerRef.current);
+      if (mazeReadyTimerRef.current)      clearTimeout(mazeReadyTimerRef.current);
     };
   }, [gameKey, gameSide, playSound]);
 
@@ -358,6 +379,7 @@ export default function GameScreen() {
   const handleStartOrAction = useCallback(() => {
     enableAudio();
     if (engineRef.current?.getState().phase === "start") {
+      if (!mazeReadyRef.current) return;
       engineRef.current.startGame();
     } else {
       handleRestart();
@@ -409,7 +431,7 @@ export default function GameScreen() {
         if (dist < 10) {
           enableAudio();
           const phase = engineRef.current?.getState().phase;
-          if (phase === "start") {
+          if (phase === "start" && mazeReadyRef.current) {
             engineRef.current?.startGame();
           }
         }
@@ -454,6 +476,7 @@ export default function GameScreen() {
             level={gameState.level}
             lastLevelTimeBonus={gameState.lastLevelTimeBonus}
             lastLevelTimeBonusRank={gameState.lastLevelTimeBonusRank}
+            mazeReady={mazeReady}
           />
         )}
         {navPaused && gameState && (

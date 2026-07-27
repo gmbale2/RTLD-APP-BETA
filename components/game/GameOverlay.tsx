@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet, Platform } from "react-native";
+import { View, Text, Pressable, StyleSheet, Platform, ActivityIndicator } from "react-native";
 import { Phase } from "./GameEngine";
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
   level?: number;
   lastLevelTimeBonus?: number;
   lastLevelTimeBonusRank?: string;
+  mazeReady?: boolean;
 }
 
 const titleShadow =
@@ -19,7 +20,7 @@ const titleShadow =
         textShadowRadius: 15,
       };
 
-export function GameOverlay({ phase, onRestart, level, lastLevelTimeBonus, lastLevelTimeBonusRank }: Props) {
+export function GameOverlay({ phase, onRestart, level, lastLevelTimeBonus, lastLevelTimeBonusRank, mazeReady = true }: Props) {
   if (phase === "levelup") {
     const bonus = lastLevelTimeBonus ?? 0;
     const rank = lastLevelTimeBonusRank ?? "";
@@ -50,6 +51,21 @@ export function GameOverlay({ phase, onRestart, level, lastLevelTimeBonus, lastL
 
   if (phase === "start") {
     const isNewLevel = level != null && level > 1;
+
+    if (!mazeReady) {
+      return (
+        <View style={styles.overlay}>
+          {isNewLevel ? (
+            <Text style={[styles.mainText, { color: "#ff00ff" }, titleShadow]}>
+              LEVEL {level}
+            </Text>
+          ) : null}
+          <ActivityIndicator color="#cc00ff" size="large" style={{ marginTop: 8 }} />
+          <Text style={[styles.subText, { color: "#555", marginTop: 8 }]}>LOADING MAZE...</Text>
+        </View>
+      );
+    }
+
     if (isNewLevel) {
       return (
         <View style={styles.overlay}>
