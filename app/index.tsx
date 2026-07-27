@@ -85,6 +85,7 @@ export default function GameScreen() {
   const spinThresholdRef           = useRef<number>(DEFAULT_SPIN_THRESHOLD);
   const prizeEnabledRef            = useRef<boolean>(true);
   const rafRef                     = useRef<number | null>(null);
+  const heldDPadDir                = useRef<{dx:number,dy:number}|null>(null);
   const deadTimerRef               = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelTimerRef              = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelRestartTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -138,6 +139,14 @@ export default function GameScreen() {
     engineRef.current?.setDirection(dx, dy);
   }, []);
 
+  const handleDPadHold = useCallback((dx: number, dy: number) => {
+    heldDPadDir.current = { dx, dy };
+  }, []);
+
+  const handleDPadRelease = useCallback(() => {
+    heldDPadDir.current = null;
+  }, []);
+
   const handleDPadDirection = useCallback((dx: number, dy: number) => {
     enableAudio();
     const eng = engineRef.current;
@@ -180,6 +189,12 @@ export default function GameScreen() {
         accumulator -= TICK_MS;
         const eng = engineRef.current;
         if (!eng) break;
+
+        // Re-apply held D-pad direction every tick — mimics a held keyboard key
+        // so the engine keeps retrying the queued turn until alignment allows it.
+        if (heldDPadDir.current) {
+          eng.setDirection(heldDPadDir.current.dx, heldDPadDir.current.dy);
+        }
 
         const prevState   = eng.getState();
         const prevPhase   = prevState.phase;
@@ -512,6 +527,8 @@ export default function GameScreen() {
           containerWidth={mazeSide}
           areaHeight={logoAreaHeight}
           onDirection={handleDPadDirection}
+          onHoldDirection={handleDPadHold}
+          onReleaseDirection={handleDPadRelease}
         />
       )}
 
@@ -576,19 +593,21 @@ function FilmLogo({
 // ── D-pad button — defined at MODULE SCOPE so React never remounts it mid-gesture ──
 
 function DPadBtn({
-  dx, dy, icon, btnW, btnH, iconSz, onDirection,
+  dx, dy, icon, btnW, btnH, iconSz, onDirection, onHold, onRelease,
 }: {
   dx: number; dy: number; icon: string;
   btnW: number; btnH: number; iconSz: number;
   onDirection: (dx: number, dy: number) => void;
+  onHold: (dx: number, dy: number) => void;
+  onRelease: () => void;
 }) {
   const [isPressed, setIsPressed] = React.useState(false);
   return (
     <View
       style={[dpadStyles.btn, { width: btnW, height: btnH }, isPressed && dpadStyles.btnPressed]}
-      onTouchStart={() => { onDirection(dx, dy); setIsPressed(true); }}
-      onTouchEnd={() => setIsPressed(false)}
-      onTouchCancel={() => setIsPressed(false)}
+      onTouchStart={() => { onDirection(dx, dy); onHold(dx, dy); setIsPressed(true); }}
+      onTouchEnd={() => { onRelease(); setIsPressed(false); }}
+      onTouchCancel={() => { onRelease(); setIsPressed(false); }}
     >
       <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
     </View>
@@ -601,10 +620,14 @@ function DPad({
   containerWidth,
   areaHeight,
   onDirection,
+  onHoldDirection,
+  onReleaseDirection,
 }: {
   containerWidth: number;
   areaHeight: number;
   onDirection: (dx: number, dy: number) => void;
+  onHoldDirection: (dx: number, dy: number) => void;
+  onReleaseDirection: () => void;
 }) {
   const padTop  = 18;
   const padBot  = 6;
@@ -626,13 +649,13 @@ function DPad({
         {/* Row 1: Up — centred above Down */}
         <View style={{ flexDirection: "row" }}>
           <View style={{ width: btnW + btnGap }} />
-          <DPadBtn dx={0} dy={-1} icon="chevron-up" btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
+          <DPadBtn dx={0} dy={-1} icon="chevron-up" btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} onHold={onHoldDirection} onRelease={onReleaseDirection} />
         </View>
         {/* Row 2: Left / Down / Right */}
         <View style={{ flexDirection: "row", gap: btnGap }}>
-          <DPadBtn dx={-1} dy={0} icon="chevron-left"  btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
-          <DPadBtn dx={0}  dy={1} icon="chevron-down"  btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
-          <DPadBtn dx={1}  dy={0} icon="chevron-right" btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
+          <DPadBtn dx={-1} dy={0} icon="chevron-left"  btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} onHold={onHoldDirection} onRelease={onReleaseDirection} />
+          <DPadBtn dx={0}  dy={1} icon="chevron-down"  btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} onHold={onHoldDirection} onRelease={onReleaseDirection} />
+          <DPadBtn dx={1}  dy={0} icon="chevron-right" btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} onHold={onHoldDirection} onRelease={onReleaseDirection} />
         </View>
       </View>
     </View>
