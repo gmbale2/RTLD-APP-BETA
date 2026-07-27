@@ -146,8 +146,10 @@ export default function GameScreen() {
     heldDPadDir.current = { dx, dy };
   }, []);
 
-  const handleDPadRelease = useCallback(() => {
-    heldDPadDir.current = null;
+  const handleDPadRelease = useCallback((dx: number, dy: number) => {
+    if (heldDPadDir.current?.dx === dx && heldDPadDir.current?.dy === dy) {
+      heldDPadDir.current = null;
+    }
   }, []);
 
   const handleDPadDirection = useCallback((dx: number, dy: number) => {
@@ -182,7 +184,7 @@ export default function GameScreen() {
     mazeReadyTimerRef.current = setTimeout(() => {
       mazeReadyRef.current = true;
       setMazeReady(true);
-    }, 900);
+    }, 2000);
 
     const TICK_MS   = 33;
     let lastTime    = performance.now();
@@ -250,7 +252,7 @@ export default function GameScreen() {
             mazeReadyTimerRef.current = setTimeout(() => {
               mazeReadyRef.current = true;
               setMazeReady(true);
-            }, 900);
+            }, 2000);
 
             // Wait 2 animation frames so React paints the new full maze
             // before the game loop (and input) can advance the engine again
@@ -622,15 +624,15 @@ function DPadBtn({
   btnW: number; btnH: number; iconSz: number;
   onDirection: (dx: number, dy: number) => void;
   onHold: (dx: number, dy: number) => void;
-  onRelease: () => void;
+  onRelease: (dx: number, dy: number) => void;
 }) {
   const [isPressed, setIsPressed] = React.useState(false);
   return (
     <View
       style={[dpadStyles.btn, { width: btnW, height: btnH }, isPressed && dpadStyles.btnPressed]}
       onTouchStart={() => { onDirection(dx, dy); onHold(dx, dy); setIsPressed(true); }}
-      onTouchEnd={() => { onRelease(); setIsPressed(false); }}
-      onTouchCancel={() => { onRelease(); setIsPressed(false); }}
+      onTouchEnd={() => { onRelease(dx, dy); setIsPressed(false); }}
+      onTouchCancel={() => { onRelease(dx, dy); setIsPressed(false); }}
     >
       <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
     </View>
@@ -650,7 +652,7 @@ function DPad({
   areaHeight: number;
   onDirection: (dx: number, dy: number) => void;
   onHoldDirection: (dx: number, dy: number) => void;
-  onReleaseDirection: () => void;
+  onReleaseDirection: (dx: number, dy: number) => void;
 }) {
   const padTop  = 18;
   const padBot  = 6;

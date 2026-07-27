@@ -110,7 +110,7 @@ const SPEED_TABLE: [number, number, number, number][] = [
 
 // Cornering tolerance: how far through the current tile the player can be before
 // a queued perpendicular turn is applied early (Pac-Man "cornering" mechanic).
-const CORNER_THRESHOLD = 0.5;
+const CORNER_THRESHOLD = 0.7;
 
 function getSpeedTier(level: number): [number, number, number, number] {
   if (level <= 1) return SPEED_TABLE[0];
