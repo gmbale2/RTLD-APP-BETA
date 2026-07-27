@@ -33,6 +33,18 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "488687de-001e-460d-9ebf-e360b23167cb"
+      }
+    },
+    "owner": "gmbale2",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/488687de-001e-460d-9ebf-e360b23167cb"
     }
   }
 }
