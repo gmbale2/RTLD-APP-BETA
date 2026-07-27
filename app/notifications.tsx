@@ -164,7 +164,7 @@ export default function NotificationsScreen() {
       {/* Back button (settings mode only) */}
       {fromSettings ? (
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <FontAwesome5 name="arrow-left" size={12} color="#aa88cc" />
+          <FontAwesome5 name="arrow-left" size={16} color="#aa88cc" />
           <Text style={styles.backText}>BACK</Text>
         </Pressable>
       ) : null}
@@ -423,12 +423,14 @@ const styles = StyleSheet.create({
   backBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
     alignSelf: "flex-start",
     marginBottom: 12,
+    paddingVertical: 10,
+    paddingRight: 20,
   },
   backText: {
-    fontSize: 10,
+    fontSize: 13,
     color: "#aa88cc",
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,

@@ -56,7 +56,7 @@ export default function UpdatesScreen() {
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
 
       <Pressable style={styles.backBtn} onPress={() => router.replace("/hub")}>
-        <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
+        <FontAwesome5 name="arrow-left" size={16} color="#ffffff" />
         <Text style={styles.backText}>BACK</Text>
       </Pressable>
 
@@ -136,10 +136,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    gap: 6,
+    gap: 8,
     marginBottom: 8,
+    paddingVertical: 10,
+    paddingRight: 20,
   },
-  backText:     { fontSize: 10, color: "#ffffff", fontFamily: "Inter_700Bold", letterSpacing: 2 },
+  backText:     { fontSize: 13, color: "#ffffff", fontFamily: "Inter_700Bold", letterSpacing: 2 },
   pageTitle:    { fontSize: 22, color: "#39ff14", fontFamily: "Inter_700Bold", letterSpacing: 3, marginBottom: 2 },
   pageSubtitle: { fontSize: 9, color: "#39ff14", fontFamily: "Inter_700Bold", letterSpacing: 2, marginBottom: 12, opacity: 0.6 },
   scroll:       { flex: 1, width: "100%" },

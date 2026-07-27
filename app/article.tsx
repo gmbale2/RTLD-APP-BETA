@@ -82,7 +82,7 @@ export default function ArticleScreen() {
     return (
       <View style={[styles.root, { paddingTop: insets.top || 16 }]}>
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
+          <FontAwesome5 name="arrow-left" size={16} color="#ffffff" />
           <Text style={styles.backText}>BACK</Text>
         </Pressable>
         <View style={styles.notFound}>
@@ -97,7 +97,7 @@ export default function ArticleScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
       <Pressable style={styles.backBtn} onPress={() => router.back()}>
-        <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
+        <FontAwesome5 name="arrow-left" size={16} color="#ffffff" />
         <Text style={styles.backText}>ALL POSTS</Text>
       </Pressable>
 
@@ -146,11 +146,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    gap: 6,
+    gap: 8,
     marginBottom: 12,
+    paddingVertical: 10,
+    paddingRight: 20,
   },
   backText: {
-    fontSize: 10,
+    fontSize: 13,
     color: "#ffffff",
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,

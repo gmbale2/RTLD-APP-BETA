@@ -44,7 +44,7 @@ export default function FilmOppsScreen() {
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
 
       <Pressable style={styles.backBtn} onPress={() => router.replace("/hub")}>
-        <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
+        <FontAwesome5 name="arrow-left" size={16} color="#ffffff" />
         <Text style={styles.backText}>BACK</Text>
       </Pressable>
 
@@ -142,10 +142,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    gap: 6,
+    gap: 8,
     marginBottom: 8,
+    paddingVertical: 10,
+    paddingRight: 20,
   },
-  backText: { fontSize: 10, color: "#ffffff", fontFamily: "Inter_700Bold", letterSpacing: 2 },
+  backText: { fontSize: 13, color: "#ffffff", fontFamily: "Inter_700Bold", letterSpacing: 2 },
 
   pageTitle:    { fontSize: 20, color: ACCENT, fontFamily: "Inter_700Bold", letterSpacing: 2, textAlign: "center", marginBottom: 2 },
   pageSubtitle: { fontSize: 9, color: ACCENT_DIM, fontFamily: "Inter_700Bold", letterSpacing: 3, marginBottom: 10 },

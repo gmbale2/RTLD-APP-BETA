@@ -206,7 +206,7 @@ export default function SettingsScreen() {
       {/* Top bar */}
       <View style={styles.topBar}>
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
+          <FontAwesome5 name="arrow-left" size={16} color="#ffffff" />
           <Text style={styles.backText}>BACK</Text>
         </Pressable>
         <FontAwesome5 name="cog" size={18} color="#cc00ff" />
@@ -457,10 +457,12 @@ const styles = StyleSheet.create({
   backBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
+    paddingVertical: 10,
+    paddingRight: 20,
   },
   backText: {
-    fontSize: 10,
+    fontSize: 13,
     color: "#ffffff",
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,

@@ -104,7 +104,7 @@ export default function HubScreen() {
       {/* Top bar: back left, settings right */}
       <View style={styles.topBar}>
         <Pressable style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace("/")}>
-          <FontAwesome5 name="arrow-left" size={12} color="#ffffff" />
+          <FontAwesome5 name="arrow-left" size={16} color="#ffffff" />
           <Text style={styles.backText}>BACK</Text>
         </Pressable>
         <Pressable style={styles.settingsBtn} onPress={() => router.push("/settings")}>
@@ -194,13 +194,15 @@ const styles = StyleSheet.create({
   backBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
+    paddingVertical: 10,
+    paddingRight: 20,
   },
   settingsBtn: {
     padding: 4,
   },
   backText: {
-    fontSize: 10,
+    fontSize: 13,
     color: "#ffffff",
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
