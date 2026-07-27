@@ -140,7 +140,14 @@ export default function GameScreen() {
 
   const handleDPadDirection = useCallback((dx: number, dy: number) => {
     enableAudio();
-    engineRef.current?.setDirection(dx, dy);
+    const eng = engineRef.current;
+    if (!eng) return;
+    eng.setDirection(dx, dy);
+    // Bypass RAF latency: render the first step immediately instead of waiting up to 33ms.
+    if (eng.getState().phase === "playing") {
+      eng.tick();
+      setGameState({ ...eng.getState() });
+    }
   }, [enableAudio]);
 
   useEffect(() => {
