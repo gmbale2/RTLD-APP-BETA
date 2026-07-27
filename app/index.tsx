@@ -415,14 +415,19 @@ export default function GameScreen() {
     <View
       style={[styles.root, { paddingTop: topPad, paddingBottom: bottomPad }]}
     >
-      <Text
-        style={[
-          styles.title,
-          isWeb ? styles.titleShadowWeb : styles.titleShadowNative,
-        ]}
-      >
-        BRAIN BITE
-      </Text>
+      {isWeb ? (
+        <Text style={[styles.title, isWeb ? styles.titleShadowWeb : styles.titleShadowNative]}>
+          BRAIN BITE
+        </Text>
+      ) : (
+        <Pressable
+          style={({ pressed }) => [styles.seeMoreBar, pressed && { opacity: 0.75 }]}
+          onPress={() => router.push("/hub")}
+        >
+          <FontAwesome5 name="th-large" size={10} color="#0a0012" solid />
+          <Text style={styles.seeMoreBarText}>SEE MORE</Text>
+        </Pressable>
+      )}
 
       <View style={[styles.mazeWrapper, { width: mazeSide, height: mazeSide }]} {...panResponder.panHandlers}>
         <CemeteryBorder size={mazeSide} borderSize={0} />
@@ -506,7 +511,6 @@ export default function GameScreen() {
         <DPad
           containerWidth={mazeSide}
           areaHeight={logoAreaHeight}
-          onHubPress={() => router.push("/hub")}
           onDirection={handleDPadDirection}
         />
       )}
@@ -582,11 +586,9 @@ function DPadBtn({
   return (
     <View
       style={[dpadStyles.btn, { width: btnW, height: btnH }, isPressed && dpadStyles.btnPressed]}
-      onStartShouldSetResponder={() => true}
-      onResponderGrant={() => { onDirection(dx, dy); setIsPressed(true); }}
-      onResponderRelease={() => setIsPressed(false)}
-      onResponderTerminate={() => setIsPressed(false)}
-      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      onTouchStart={() => { onDirection(dx, dy); setIsPressed(true); }}
+      onTouchEnd={() => setIsPressed(false)}
+      onTouchCancel={() => setIsPressed(false)}
     >
       <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
     </View>
@@ -598,19 +600,17 @@ function DPadBtn({
 function DPad({
   containerWidth,
   areaHeight,
-  onHubPress,
   onDirection,
 }: {
   containerWidth: number;
   areaHeight: number;
-  onHubPress: () => void;
   onDirection: (dx: number, dy: number) => void;
 }) {
   const padTop  = 18;
   const padBot  = 6;
   const avail   = areaHeight - padTop - padBot;
   const btnH    = Math.max(56, Math.min(76, Math.floor(avail / 2) - 4));
-  const btnW    = Math.round(btnH * 1.55);   // rectangular — wider than tall
+  const btnW    = Math.round(btnH * 1.55);
   const rowGap  = 8;
   const btnGap  = 14;
   const iconSz  = Math.round(btnH * 0.44);
@@ -623,19 +623,10 @@ function DPad({
       ]}
     >
       <View style={{ flexDirection: "column", gap: rowGap, alignItems: "flex-start" }}>
-        {/* Row 1: spacer | Up | flex push | SEE MORE flush to screen edge */}
-        <View style={{ flexDirection: "row", alignItems: "center", width: containerWidth - 8 }}>
-          <View style={{ width: btnW }} />
-          <View style={{ width: btnGap }} />
+        {/* Row 1: Up — centred above Down */}
+        <View style={{ flexDirection: "row" }}>
+          <View style={{ width: btnW + btnGap }} />
           <DPadBtn dx={0} dy={-1} icon="chevron-up" btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
-          <View style={{ flex: 1 }} />
-          <Pressable
-            style={({ pressed }) => [dpadStyles.seeMoreBtn, { height: btnH }, pressed && { opacity: 0.75 }]}
-            onPress={onHubPress}
-          >
-            <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
-            <Text style={dpadStyles.seeMoreText}>SEE MORE</Text>
-          </Pressable>
         </View>
         {/* Row 2: Left / Down / Right */}
         <View style={{ flexDirection: "row", gap: btnGap }}>
@@ -711,6 +702,24 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     marginTop: 2,
     fontFamily: "Inter_700Bold",
+  },
+  seeMoreBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    width: "100%",
+    height: 36,
+    marginBottom: 4,
+    marginTop: 2,
+    backgroundColor: "#cc00ff",
+    borderRadius: 8,
+  },
+  seeMoreBarText: {
+    fontSize: 11,
+    color: "#0a0012",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 2,
   },
   titleShadowWeb: titleShadowWeb,
   titleShadowNative: titleShadowNative,
