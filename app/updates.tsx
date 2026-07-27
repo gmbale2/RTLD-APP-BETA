@@ -8,16 +8,28 @@ import {
   Platform,
   TextStyle,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 
-import { fetchBlogArticles, ShopifyArticle } from "@/utils/shopify";
-import { setArticles as storeArticles } from "@/utils/articleStore";
+import { supabase } from "@/utils/supabase";
 
-const BLOG_HANDLE = "tarman-today";
+interface ContentPost {
+  id: string;
+  title: string;
+  body: string | null;
+  vimeo_url: string | null;
+  published_at: string;
+}
+
+function extractVimeoId(url: string | null): string | null {
+  if (!url) return null;
+  const m = url.match(/vimeo\.com\/(\d+)/);
+  return m ? m[1] : null;
+}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -29,28 +41,22 @@ function formatDate(iso: string): string {
 
 export default function UpdatesScreen() {
   const insets = useSafeAreaInsets();
-  const [articles, setArticles] = useState<ShopifyArticle[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [posts, setPosts]   = useState<ContentPost[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBlogArticles(BLOG_HANDLE).then((a) => {
-      storeArticles(a);
-      setArticles(a);
-      setLoading(false);
-    });
+    if (!supabase) { setLoading(false); return; }
+    supabase
+      .from("content_posts")
+      .select("id, title, body, vimeo_url, published_at")
+      .eq("section", "movie_updates")
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setPosts(data as ContentPost[]);
+        setLoading(false);
+      });
   }, []);
-
-  const posts = articles.map((a) => {
-    const hasVideo = a.tags.map((t) => t.toLowerCase()).some((t) => t === "video" || t === "trailer");
-    return {
-      id:        a.id,
-      date:      formatDate(a.publishedAt),
-      title:     a.title,
-      excerpt:   a.excerpt,
-      heroImage: a.imageUrl ?? "",
-      hasVideo,
-    };
-  });
 
   return (
     <View style={[styles.root, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
@@ -79,37 +85,58 @@ export default function UpdatesScreen() {
             <Text style={styles.stateText}>NO POSTS YET</Text>
           </View>
         ) : (
-          posts.map((post) => (
-            <Pressable
-              key={post.id}
-              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-              onPress={() => router.push({ pathname: "/article", params: { id: post.id } })}
-            >
-              <View style={styles.heroArea}>
-                <ExpoImage
-                  source={{ uri: post.heroImage }}
-                  contentFit="cover"
-                  style={StyleSheet.absoluteFillObject}
-                />
-                <View style={styles.heroGradient} />
-                {post.hasVideo && (
-                  <View style={styles.playOverlay}>
-                    <FontAwesome5 name="play-circle" size={40} color="rgba(255,255,255,0.9)" solid />
-                  </View>
-                )}
-              </View>
+          posts.map((post) => {
+            const vimeoId  = extractVimeoId(post.vimeo_url);
+            const thumbUri = vimeoId ? `https://vumbnail.com/${vimeoId}.jpg` : null;
 
-              <View style={styles.cardBody}>
-                <Text style={styles.postDate}>{post.date}</Text>
-                <Text style={styles.postTitle}>{post.title}</Text>
-                <Text style={styles.postExcerpt} numberOfLines={3}>{post.excerpt}</Text>
-                <View style={styles.readMoreRow}>
-                  <Text style={styles.readMoreText}>{post.hasVideo ? "WATCH NOW" : "READ MORE"}</Text>
-                  <FontAwesome5 name={post.hasVideo ? "play" : "arrow-right"} size={9} color="#39ff14" />
+            return (
+              <Pressable
+                key={post.id}
+                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                onPress={() => {
+                  if (post.vimeo_url) Linking.openURL(post.vimeo_url);
+                }}
+              >
+                {/* Hero */}
+                <View style={styles.heroArea}>
+                  {thumbUri ? (
+                    <>
+                      <ExpoImage
+                        source={{ uri: thumbUri }}
+                        contentFit="cover"
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                      <View style={styles.heroGradient} />
+                    </>
+                  ) : (
+                    <View style={styles.heroFallback}>
+                      <Text style={styles.heroEmoji}>🎬</Text>
+                    </View>
+                  )}
+                  {post.vimeo_url && (
+                    <View style={styles.playOverlay}>
+                      <FontAwesome5 name="play-circle" size={40} color="rgba(255,255,255,0.9)" solid />
+                    </View>
+                  )}
                 </View>
-              </View>
-            </Pressable>
-          ))
+
+                {/* Body */}
+                <View style={styles.cardBody}>
+                  <Text style={styles.postDate}>{formatDate(post.published_at)}</Text>
+                  <Text style={styles.postTitle}>{post.title}</Text>
+                  {!!post.body && (
+                    <Text style={styles.postExcerpt} numberOfLines={3}>{post.body}</Text>
+                  )}
+                  {post.vimeo_url && (
+                    <View style={styles.readMoreRow}>
+                      <Text style={styles.readMoreText}>WATCH NOW</Text>
+                      <FontAwesome5 name="play" size={9} color="#39ff14" />
+                    </View>
+                  )}
+                </View>
+              </Pressable>
+            );
+          })
         )}
 
         <View style={{ height: 8 }} />
@@ -151,6 +178,8 @@ const styles = StyleSheet.create({
   cardPressed:  { opacity: 0.75 },
   heroArea:     { width: "100%", height: 170, backgroundColor: "#020a00", overflow: "hidden" },
   heroGradient: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.25)" },
+  heroFallback: { flex: 1, alignItems: "center", justifyContent: "center" },
+  heroEmoji:    { fontSize: 48 },
   playOverlay:  { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
   cardBody:     { padding: 14, gap: 5 },
   postDate:     { fontSize: 9, color: "#39ff14", fontFamily: "Inter_400Regular", letterSpacing: 1 },
