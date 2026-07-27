@@ -129,7 +129,9 @@ export default function HubScreen() {
           <Pressable
             key={s.key}
             style={({ pressed }) => [styles.cardWrap, pressed && styles.cardPressed]}
-            onPress={() => router.replace(s.route)}
+            onPress={() => s.key === "game"
+              ? (router.canGoBack() ? router.back() : router.replace("/"))
+              : router.replace(s.route)}
           >
             <ExpoImage
               source={s.key === "filmopps" && filmThumb ? { uri: filmThumb } : s.image}
