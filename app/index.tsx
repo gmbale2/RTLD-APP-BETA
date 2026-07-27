@@ -610,8 +610,7 @@ function DPad({
   const padBot  = 6;
   const avail   = areaHeight - padTop - padBot;
   const btnH    = Math.max(56, Math.min(76, Math.floor(avail / 2) - 4));
-  const maxBtnW = Math.floor((containerWidth - 2 * btnGap) / 3);
-  const btnW    = Math.min(Math.round(btnH * 1.9), maxBtnW);
+  const btnW    = Math.round(btnH * 1.55);
   const rowGap  = 8;
   const btnGap  = 14;
   const iconSz  = Math.round(btnH * 0.44);
