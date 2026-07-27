@@ -334,7 +334,7 @@ export default function GameOverScreen() {
         level={level}
         username={username}
         rank={playerRank}
-        isMock={isMock}
+        isMock={false}
         cardRef={cardRef}
       />
 

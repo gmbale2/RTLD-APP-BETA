@@ -76,7 +76,7 @@ export function GameOverlay({ phase, onRestart, level, lastLevelTimeBonus, lastL
           <Text style={styles.instructionText}>Swipe in any direction to move</Text>
           <Text style={styles.instructionText}>Desktop: Arrow keys / WASD</Text>
           <Text style={[styles.instructionText, { color: "#33ff66", marginTop: 4 }]}>
-            Green cans = Power Up!
+            Green barrels = Power Up!
           </Text>
         </View>
         <Pressable
