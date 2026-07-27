@@ -611,9 +611,12 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             const skin = SKIN_SETS[skinSetIdx][punkSlotIndex(punk.color)];
 
             // Horizontal flip for useFlip=true sprites moving right.
-            // Native: scaleX/originX scalar props update in-place reliably (no key change needed).
-            // Web: transform string updates in-place via SVG attribute mutation.
+            // Key encodes flip state so G fully remounts when direction changes —
+            // react-native-svg native G doesn't update matrix/transform in place reliably.
+            // Platform split: native needs matrix[] array (avoids string parse bug);
+            // web needs transform string (matrix[] prop not applied as SVG transform on web).
             const needsFlip = skin.useFlip && hDir > 0;
+            const flipKey = needsFlip ? "f" : "n";
             // Web: transform string. Native: individual scaleX/originX props
             // (more reliable than matrix[] for in-place updates each frame).
             const flipProps = needsFlip
@@ -630,7 +633,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
                 ? skin.leftSrc
                 : (hDir > 0 ? skin.rightSrc : skin.leftSrc);
               return (
-                <G key={`punk-${i}`} opacity={0.45} {...flipProps}>
+                <G key={`punk-${i}-${flipKey}`} opacity={0.45} {...flipProps}>
                   <Circle cx={punk.pixelX} cy={punk.pixelY} r={ts * 0.35}
                     fill="rgba(255,68,170,0.18)" stroke="#ff44aa" strokeWidth={0.8} />
                   <SvgImage key="img" x={punk.pixelX - ghW / 2} y={punk.pixelY - ghH * 0.7}
@@ -652,7 +655,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
                 ? skin.ghostLeftSrc
                 : (hDir > 0 ? skin.ghostRightSrc : skin.ghostLeftSrc);
               return (
-                <G key={`punk-${i}`} {...flipProps}>
+                <G key={`punk-${i}-${flipKey}`} {...flipProps}>
                   <Circle cx={punk.pixelX} cy={punk.pixelY} r={ts * 0.75}
                     fill="rgba(80,120,255,0.15)" stroke="#4466ff" strokeWidth={1} opacity={0.6} />
                   <SvgImage key="img" x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
@@ -666,7 +669,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               ? skin.leftSrc
               : (hDir > 0 ? skin.rightSrc : skin.leftSrc);
             return (
-              <G key={`punk-${i}`} {...flipProps}>
+              <G key={`punk-${i}-${flipKey}`} {...flipProps}>
                 <SvgImage key="img" x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
                   width={pw} height={ph} href={href} preserveAspectRatio="xMidYMid meet" />
               </G>
