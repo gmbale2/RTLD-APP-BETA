@@ -98,15 +98,14 @@ const INITIAL_MAZE: number[][] = [
 ];
 
 // ─── Speed (tiles per tick at 30 fps) ────────────────────────────────────────
-// Arcade-accurate Pac-Man percentages of max speed (0.20 tiles/tick at 30 fps):
-//   L1:   player 80% / powered 90% / ghost 75% / scared 50%
-//   L2–4: player 90% / powered 95% / ghost 85% / scared 55%
-//   L5+:  player 100% / powered 100% / ghost 95% / scared 60%
+// Speed as tiles/tick at 30 fps. All tiers scaled ×0.85 from original arcade values
+// for better mobile feel. Power durations unchanged — scared ghosts also scale so
+// closing speed stays proportional and the window feels identical in real time.
 // [playerNormal, playerPowered, ghostNormal, ghostScared]
 const SPEED_TABLE: [number, number, number, number][] = [
-  [0.16, 0.18, 0.15, 0.10],  // Level 1
-  [0.18, 0.19, 0.17, 0.11],  // Levels 2–4
-  [0.20, 0.20, 0.19, 0.12],  // Levels 5+
+  [0.136, 0.153, 0.128, 0.085],  // Level 1
+  [0.153, 0.162, 0.145, 0.094],  // Levels 2–4
+  [0.170, 0.170, 0.162, 0.102],  // Levels 5+
 ];
 
 // Cornering tolerance: how far through the current tile the player can be before

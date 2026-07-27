@@ -425,7 +425,7 @@ export default function GameScreen() {
           onPress={() => router.push("/hub")}
         >
           <FontAwesome5 name="th-large" size={10} color="#0a0012" solid />
-          <Text style={styles.seeMoreBarText}>SEE MORE</Text>
+          <Text style={styles.seeMoreBarText}>EXPLORE MORE</Text>
         </Pressable>
       )}
 
