@@ -142,6 +142,20 @@ export default function GameScreen() {
     engineRef.current?.setDirection(dx, dy);
   }, []);
 
+  const handleHubNav = useCallback(() => {
+    const phase = engineRef.current?.getState().phase;
+    if (phase === "playing") {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      pauseMusic();
+      navPausedRef.current = true;
+      setNavPaused(true);
+    }
+    router.push("/hub");
+  }, [pauseMusic]);
+
   const handleDPadHold = useCallback((dx: number, dy: number) => {
     heldDPadDir.current = { dx, dy };
   }, []);
@@ -461,10 +475,10 @@ export default function GameScreen() {
       ) : (
         <Pressable
           style={({ pressed }) => [styles.seeMoreBar, pressed && { opacity: 0.75 }]}
-          onPress={() => router.push("/hub")}
+          onPress={handleHubNav}
         >
           <FontAwesome5 name="th-large" size={10} color="#0a0012" solid />
-          <Text style={styles.seeMoreBarText}>EXPLORE MORE</Text>
+          <Text style={styles.seeMoreBarText}>SEE MORE FROM RTLD</Text>
         </Pressable>
       )}
 
@@ -545,7 +559,7 @@ export default function GameScreen() {
         <FilmLogo
           containerWidth={mazeSide}
           areaHeight={logoAreaHeight}
-          onHubPress={() => router.push("/hub")}
+          onHubPress={handleHubNav}
         />
       ) : (
         <DPad
@@ -609,7 +623,7 @@ function FilmLogo({
         onPress={onHubPress}
       >
         <FontAwesome5 name="th-large" size={9} color="#0a0012" solid />
-        <Text style={styles.hubBtnText}>SEE MORE</Text>
+        <Text style={styles.hubBtnText}>SEE MORE FROM RTLD</Text>
       </Pressable>
     </View>
   );
