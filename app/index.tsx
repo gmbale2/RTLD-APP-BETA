@@ -555,9 +555,8 @@ function FilmLogo({
         style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.75 }]}
         onPress={onHubPress}
       >
-        <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
-        <Text style={styles.hubBtnText}>EXPLORE MORE →</Text>
-        <FontAwesome5 name="chevron-right" size={10} color="#0a0012" />
+        <FontAwesome5 name="th-large" size={9} color="#0a0012" solid />
+        <Text style={styles.hubBtnText}>SEE MORE</Text>
       </Pressable>
     </View>
   );
@@ -576,11 +575,13 @@ function DPad({
   onHubPress: () => void;
   onDirection: (dx: number, dy: number) => void;
 }) {
-  const hubH   = 44;
-  const padV   = 10;
-  const avail  = areaHeight - hubH - padV * 2;
-  const btnSize = Math.max(36, Math.min(54, Math.floor(avail / 3) - 4));
-  const gap    = 4;
+  const hubH    = 30;
+  const padV    = 8;
+  const avail   = areaHeight - hubH - padV * 2;
+  // 2 rows now — more space per button
+  const btnSize = Math.max(50, Math.min(72, Math.floor(avail / 2) - 6));
+  const gap     = 6;
+  const iconSz  = Math.round(btnSize * 0.42);
 
   const Btn = ({
     dx, dy, icon,
@@ -592,54 +593,43 @@ function DPad({
         pressed && dpadStyles.btnPressed,
       ]}
       onPressIn={() => onDirection(dx, dy)}
-      hitSlop={4}
+      hitSlop={12}
     >
-      <FontAwesome5 name={icon} size={Math.round(btnSize * 0.36)} color="#cc00ff" />
+      <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
     </Pressable>
   );
 
   return (
-    <View style={[styles.logoArea, { width: containerWidth, height: areaHeight }]}>
-      {/* Cross layout */}
+    <View style={[styles.logoArea, { width: containerWidth, height: areaHeight, paddingTop: padV }]}>
+      {/* Arrow-key layout: Up on top, Left/Down/Right below */}
       <View style={[dpadStyles.cross, { gap }]}>
-        {/* Row 1 — Up */}
-        <View style={[dpadStyles.row, { gap }]}>
-          <View style={{ width: btnSize, height: btnSize }} />
+        {/* Row 1 — Up (centered above Down) */}
+        <View style={dpadStyles.row}>
           <Btn dx={0} dy={-1} icon="chevron-up" />
-          <View style={{ width: btnSize, height: btnSize }} />
         </View>
-        {/* Row 2 — Left / Center / Right */}
+        {/* Row 2 — Left / Down / Right */}
         <View style={[dpadStyles.row, { gap }]}>
           <Btn dx={-1} dy={0} icon="chevron-left" />
-          <View style={[dpadStyles.center, { width: btnSize, height: btnSize }]}>
-            <FontAwesome5 name="skull" size={Math.round(btnSize * 0.36)} color="#2a0044" />
-          </View>
-          <Btn dx={1} dy={0} icon="chevron-right" />
-        </View>
-        {/* Row 3 — Down */}
-        <View style={[dpadStyles.row, { gap }]}>
-          <View style={{ width: btnSize, height: btnSize }} />
-          <Btn dx={0} dy={1} icon="chevron-down" />
-          <View style={{ width: btnSize, height: btnSize }} />
+          <Btn dx={0}  dy={1} icon="chevron-down" />
+          <Btn dx={1}  dy={0} icon="chevron-right" />
         </View>
       </View>
 
-      {/* Hub button */}
+      {/* Hub button — compact, left-aligned */}
       <Pressable
-        style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.75 }]}
+        style={({ pressed }) => [dpadStyles.seeMoreBtn, pressed && { opacity: 0.75 }]}
         onPress={onHubPress}
       >
-        <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
-        <Text style={styles.hubBtnText}>EXPLORE MORE →</Text>
-        <FontAwesome5 name="chevron-right" size={10} color="#0a0012" />
+        <FontAwesome5 name="th-large" size={8} color="#0a0012" solid />
+        <Text style={dpadStyles.seeMoreText}>SEE MORE</Text>
       </Pressable>
     </View>
   );
 }
 
 const dpadStyles = StyleSheet.create({
-  cross:      { flexDirection: "column", alignItems: "center" },
-  row:        { flexDirection: "row" },
+  cross:  { flexDirection: "column", alignItems: "center" },
+  row:    { flexDirection: "row" },
   btn: {
     backgroundColor: "rgba(80,0,120,0.55)",
     borderRadius: 10,
@@ -652,13 +642,22 @@ const dpadStyles = StyleSheet.create({
     backgroundColor: "rgba(160,0,240,0.85)",
     borderColor: "#cc00ff",
   },
-  center: {
-    backgroundColor: "rgba(15,0,25,0.8)",
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#220033",
+  seeMoreBtn: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    alignSelf: "flex-start",
+    gap: 5,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    marginLeft: 4,
+    backgroundColor: "#cc00ff",
+    borderRadius: 6,
+  },
+  seeMoreText: {
+    fontSize: 9,
+    color: "#0a0012",
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 1.5,
   },
 });
 
@@ -797,18 +796,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
-    gap: 8,
-    paddingVertical: 11,
-    paddingHorizontal: 28,
-    marginBottom: 10,
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    marginBottom: 6,
     backgroundColor: "#cc00ff",
     borderRadius: 6,
   },
   hubBtnText: {
-    fontSize: 11,
+    fontSize: 9,
     color: "#0a0012",
     fontFamily: "Inter_700Bold",
-    letterSpacing: 2,
+    letterSpacing: 1.5,
   },
   offlineBanner: {
     position: "absolute",
