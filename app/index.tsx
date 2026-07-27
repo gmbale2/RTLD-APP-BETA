@@ -372,7 +372,7 @@ export default function GameScreen() {
       onPanResponderMove: (_, gs) => {
         if (swipeHandled.current) return;
         const dist = Math.sqrt(gs.dx * gs.dx + gs.dy * gs.dy);
-        if (dist < 8) return;
+        if (dist < 6) return;
         swipeHandled.current = true;
         enableAudio();
         if (Math.abs(gs.dx) > Math.abs(gs.dy)) {
