@@ -5,6 +5,7 @@ import React, {
   useState,
 } from "react";
 import {
+  Dimensions,
   Image,
   PanResponder,
   Platform,
@@ -13,7 +14,6 @@ import {
   Text,
   TextStyle,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -50,7 +50,7 @@ export default function GameScreen() {
   }, []);
 
   const insets = useSafeAreaInsets();
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
   const isWeb = Platform.OS === "web";
 
   const topPad    = isWeb ? 4  : insets.top;
@@ -65,7 +65,10 @@ export default function GameScreen() {
   const availableWidth  = screenWidth;
   const availableHeight =
     screenHeight - topPad - bottomPad - HUD_HEIGHT - TITLE_HEIGHT - MIN_LOGO_H - MARGINS - gateReserveH;
-  const mazeSide = Math.min(availableWidth, availableHeight);
+  // Force mazeSide to a multiple of 20 so tileSize is exact and ox/oy centering offset = 0.
+  // This eliminates coordinate misalignment between the engine and canvas on mobile.
+  const rawMazeSide = Math.min(availableWidth, availableHeight);
+  const mazeSide = Math.floor(rawMazeSide / 20) * 20;
   const gameSide = mazeSide;
 
   // Remaining vertical space after every fixed element — the logo fills this
