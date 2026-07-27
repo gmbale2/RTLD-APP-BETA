@@ -372,7 +372,7 @@ export default function GameScreen() {
       onPanResponderMove: (_, gs) => {
         if (swipeHandled.current) return;
         const dist = Math.sqrt(gs.dx * gs.dx + gs.dy * gs.dy);
-        if (dist < 4) return;
+        if (dist < 6) return;
         swipeHandled.current = true;
         enableAudio();
         if (Math.abs(gs.dx) > Math.abs(gs.dy)) {
@@ -585,19 +585,21 @@ function DPad({
 
   const Btn = ({
     dx, dy, icon,
-  }: { dx: number; dy: number; icon: string }) => (
-    <Pressable
-      style={({ pressed }) => [
-        dpadStyles.btn,
-        { width: btnSize, height: btnSize },
-        pressed && dpadStyles.btnPressed,
-      ]}
-      onPressIn={() => onDirection(dx, dy)}
-      hitSlop={12}
-    >
-      <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
-    </Pressable>
-  );
+  }: { dx: number; dy: number; icon: string }) => {
+    const [isPressed, setIsPressed] = React.useState(false);
+    return (
+      <View
+        style={[dpadStyles.btn, { width: btnSize, height: btnSize }, isPressed && dpadStyles.btnPressed]}
+        onStartShouldSetResponder={() => true}
+        onResponderGrant={() => { onDirection(dx, dy); setIsPressed(true); }}
+        onResponderRelease={() => setIsPressed(false)}
+        onResponderTerminate={() => setIsPressed(false)}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      >
+        <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
+      </View>
+    );
+  };
 
   return (
     <View style={[styles.logoArea, { width: containerWidth, height: areaHeight, paddingTop: padV }]}>
