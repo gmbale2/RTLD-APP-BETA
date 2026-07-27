@@ -620,7 +620,7 @@ function DPad({
           <View style={{ width: btnSize }} />
           <DPadBtn dx={0} dy={-1} icon="chevron-up" size={btnSize} iconSz={iconSz} onDirection={onDirection} />
           <Pressable
-            style={({ pressed }) => [dpadStyles.seeMoreBtn, { height: btnSize }, pressed && { opacity: 0.75 }]}
+            style={({ pressed }) => [dpadStyles.seeMoreBtn, { height: btnSize, marginLeft: 18 }, pressed && { opacity: 0.75 }]}
             onPress={onHubPress}
           >
             <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
