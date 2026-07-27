@@ -11,7 +11,6 @@ import {
   View,
   Text,
   Pressable,
-  ScrollView,
   StyleSheet,
   ActivityIndicator,
   Platform,
@@ -306,8 +305,6 @@ export default function GameOverScreen() {
   }, []);
 
   const playerRank = result?.playerRank ?? null;
-  const entries    = result?.entries ?? [];
-  const isMock     = result?.isMock ?? false;
   const shareText  = buildShareText(score, level, username, playerRank);
 
   return (
@@ -347,65 +344,27 @@ export default function GameOverScreen() {
       {/* ── Divider ────────────────────────────────────────────────────── */}
       <View style={styles.divider} />
 
-      {/* ── Leaderboard ────────────────────────────────────────────────── */}
-      <Animated.View style={[styles.boardWrap, { opacity: fadeAnim, flex: 1 }]}>
-
-        {/* Rank + board heading */}
-        <View style={styles.boardHeaderBlock}>
-          {loading ? (
-            <ActivityIndicator color="#cc00ff" size="small" />
-          ) : playerRank ? (
-            <>
-              <Text style={styles.rankLabel}>YOUR GREATEST RANK OF ALL TIMES</Text>
-              <Text style={styles.rankLine}>
-                <Text style={styles.rankNum}>{ordinal(playerRank)}</Text>
-                <Text style={styles.rankSuffix}> WORLDWIDE</Text>
-              </Text>
-            </>
-          ) : null}
-          <Text style={styles.boardTitle}>🌍 TOP 20 LEADERBOARD</Text>
-        </View>
-
+      {/* ── Rank + Leaderboard CTA ─────────────────────────────────── */}
+      <Animated.View style={[styles.rankBlock, { opacity: fadeAnim }]}>
         {loading ? (
-          <View style={styles.boardLoading}>
-            <ActivityIndicator color="#cc00ff" size="large" />
-          </View>
-        ) : (
-          <ScrollView
-            style={styles.boardScroll}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 8 }}
-          >
-            <View style={styles.boardHeaderRow}>
-              <Text style={[styles.boardHeaderCell, { width: 34 }]}>#</Text>
-              <Text style={[styles.boardHeaderCell, { flex: 1 }]}>PLAYER</Text>
-              <Text style={[styles.boardHeaderCell, { width: 80, textAlign: "right" }]}>SCORE</Text>
-              <Text style={[styles.boardHeaderCell, { width: 36, textAlign: "right" }]}>LVL</Text>
-            </View>
+          <ActivityIndicator color="#cc00ff" size="small" />
+        ) : playerRank ? (
+          <>
+            <Text style={styles.rankLabel}>YOUR GREATEST RANK OF ALL TIMES</Text>
+            <Text style={styles.rankLine}>
+              <Text style={styles.rankNum}>{ordinal(playerRank)}</Text>
+              <Text style={styles.rankSuffix}> WORLDWIDE</Text>
+            </Text>
+          </>
+        ) : null}
 
-            {entries.map((entry, idx) => {
-              const isMe = entry.username === username;
-              return (
-                <View key={`${entry.username}-${idx}`} style={[styles.boardRow, isMe && styles.boardRowMe]}>
-                  <Text style={[styles.boardRank, isMe && styles.boardCellMe, rankColor(entry.rank)]}>
-                    {entry.rank <= 3 ? ["🥇","🥈","🥉"][entry.rank - 1] : entry.rank}
-                  </Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.boardUsername, isMe && styles.boardCellMe]} numberOfLines={1}>
-                      {isMe ? "▶ " : ""}{entry.username}
-                    </Text>
-                  </View>
-                  <Text style={[styles.boardScore, isMe && styles.boardCellMe]}>
-                    {entry.best_score.toLocaleString()}
-                  </Text>
-                  <Text style={[styles.boardLevel, isMe && styles.boardCellMe]}>
-                    {entry.best_level}
-                  </Text>
-                </View>
-              );
-            })}
-          </ScrollView>
-        )}
+        <Pressable
+          style={({ pressed }) => [styles.leaderboardBtn, pressed && { opacity: 0.75 }]}
+          onPress={() => router.push("/ranking")}
+        >
+          <FontAwesome5 name="trophy" size={12} color="#0a0012" solid />
+          <Text style={styles.leaderboardBtnText}>VIEW WORLDWIDE LEADERBOARD</Text>
+        </Pressable>
       </Animated.View>
 
       {/* ── Play Again ─────────────────────────────────────────────────── */}
@@ -548,11 +507,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  // Rank + board header
-  boardHeaderBlock: {
+  // Rank + leaderboard CTA
+  rankBlock: {
+    width: "100%",
+    maxWidth: 420,
     alignItems: "center",
-    marginBottom: 8,
-    gap: 2,
+    gap: 6,
+    marginBottom: 4,
   },
   rankLabel: {
     fontSize: 8,
@@ -560,7 +521,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
     textAlign: "center",
-    marginBottom: 2,
   },
   rankLine: {
     textAlign: "center",
@@ -577,84 +537,22 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     letterSpacing: 2,
   },
-  boardTitle: {
-    fontSize: 10,
-    color: "#cc00ff",
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 2,
-    textAlign: "center",
-  },
-
-  // Leaderboard
-  boardWrap: {
+  leaderboardBtn: {
     width: "100%",
-    maxWidth: 420,
-  },
-  boardLoading: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 30,
+    gap: 8,
+    paddingVertical: 12,
+    backgroundColor: "#cc00ff",
+    borderRadius: 6,
+    marginTop: 6,
   },
-  boardScroll: {
-    flex: 1,
-  },
-  boardHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: "#330044",
-    marginBottom: 2,
-  },
-  boardHeaderCell: {
-    fontSize: 8,
-    color: "#aa88cc",
+  leaderboardBtnText: {
+    fontSize: 11,
+    color: "#0a0012",
     fontFamily: "Inter_700Bold",
     letterSpacing: 1.5,
-  },
-  boardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
-    marginVertical: 1,
-  },
-  boardRowMe: {
-    backgroundColor: "rgba(100, 0, 150, 0.35)",
-    borderWidth: 1,
-    borderColor: "#7700aa",
-  },
-  boardRank: {
-    width: 34,
-    fontSize: 11,
-    color: "#ccbbdd",
-    fontFamily: "Inter_700Bold",
-  },
-  boardUsername: {
-    fontSize: 11,
-    color: "#ccaadd",
-    fontFamily: "Inter_400Regular",
-    letterSpacing: 0.3,
-  },
-  boardScore: {
-    width: 80,
-    fontSize: 11,
-    color: "#ccaadd",
-    fontFamily: "Inter_700Bold",
-    textAlign: "right",
-  },
-  boardLevel: {
-    width: 36,
-    fontSize: 10,
-    color: "#ccbbdd",
-    fontFamily: "Inter_400Regular",
-    textAlign: "right",
-  },
-  boardCellMe: {
-    color: "#ffffff",
-    fontFamily: "Inter_700Bold",
   },
 
   // 2× wheel bonus badge

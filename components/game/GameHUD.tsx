@@ -41,10 +41,14 @@ export function GameHUD({ score, lives, powered, powerTimer, width, level, level
   const canPause = phase === "playing";
   return (
     <View style={[styles.hud, { width }]}>
-      <View style={styles.section}>
-        <Text style={styles.label}>SCORE</Text>
-        <Text style={styles.scoreValue}>{score}</Text>
-      </View>
+      <Pressable
+        style={({ pressed }) => [styles.section, !canPause && styles.pauseBtnDisabled, pressed && canPause && { opacity: 0.6 }]}
+        onPress={canPause ? onPause : undefined}
+        hitSlop={10}
+      >
+        <Text style={[styles.label, canPause && styles.labelPause]}>PAUSE</Text>
+        <FontAwesome5 name="pause" size={14} color={canPause ? "#cc00ff" : "#330044"} />
+      </Pressable>
 
       <View style={styles.divider} />
 
@@ -86,14 +90,10 @@ export function GameHUD({ score, lives, powered, powerTimer, width, level, level
 
       <View style={styles.divider} />
 
-      <Pressable
-        style={({ pressed }) => [styles.section, !canPause && styles.pauseBtnDisabled, pressed && canPause && { opacity: 0.6 }]}
-        onPress={canPause ? onPause : undefined}
-        hitSlop={10}
-      >
-        <Text style={[styles.label, canPause && styles.labelPause]}>PAUSE</Text>
-        <FontAwesome5 name="pause" size={14} color={canPause ? "#cc00ff" : "#330044"} />
-      </Pressable>
+      <View style={styles.section}>
+        <Text style={styles.label}>SCORE</Text>
+        <Text style={styles.scoreValue}>{score}</Text>
+      </View>
     </View>
   );
 }

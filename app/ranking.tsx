@@ -10,6 +10,7 @@ import {
   Platform,
   TextStyle,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -133,11 +134,19 @@ export default function RankingScreen() {
           <View style={styles.prizeLeft}>
             <Text style={styles.prizeBadge}>{prize.title}</Text>
             <Text style={styles.prizeName}>{prize.description}</Text>
-            {periodStart ? <Text style={styles.prizeStart}>From {periodStart}</Text> : null}
+            {periodStart    ? <Text style={styles.prizeStart}>From {periodStart}</Text>      : null}
+            {periodDeadline ? <Text style={styles.prizeDeadline}>Until {periodDeadline}</Text> : null}
           </View>
           <View style={styles.prizeRight}>
-            <Text style={styles.prizeEmoji}>🏆</Text>
-            <Text style={styles.prizeDeadline}>{periodDeadline}</Text>
+            {prize.image_url ? (
+              <ExpoImage
+                source={{ uri: prize.image_url }}
+                style={styles.prizeImage}
+                contentFit="cover"
+              />
+            ) : (
+              <Text style={styles.prizeEmoji}>🏆</Text>
+            )}
           </View>
         </View>
       )}
@@ -315,9 +324,10 @@ const styles = StyleSheet.create({
   prizeName:    { fontSize: 14, color: "#ffffff", fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
   prizeValue:   { fontSize: 11, color: "#FFD700", fontFamily: "Inter_700Bold" },
   prizeStart:   { fontSize: 8, color: "#ccaa00", fontFamily: "Inter_400Regular", marginTop: 2 },
-  prizeRight:   { alignItems: "center", gap: 4, paddingLeft: 12 },
+  prizeDeadline: { fontSize: 8, color: "#ccaa00", fontFamily: "Inter_400Regular" },
+  prizeRight:   { alignItems: "center", justifyContent: "center", paddingLeft: 12 },
   prizeEmoji:   { fontSize: 32 },
-  prizeDeadline: { fontSize: 8, color: "#ccaa00", fontFamily: "Inter_400Regular", textAlign: "center", maxWidth: 90 },
+  prizeImage:   { width: 80, height: 80, borderRadius: 10, backgroundColor: "rgba(40,20,0,0.6)" },
 
   honourBanner: {
     width: "100%",
