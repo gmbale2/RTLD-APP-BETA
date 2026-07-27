@@ -429,16 +429,13 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
   // Skin set changes every level — cycles through all 10 sets, then repeats
   const skinSetIdx = (level - 1) % SKIN_SETS.length;
   const ts = tileSize;
-  const actualSize = ts * 20;
-  const ox = Math.floor((size - actualSize) / 2);
-  const oy = Math.floor((size - actualSize) / 2);
 
   // Character sprite sizes
   const skullW      = ts * 1.65;
   const skullH      = ts * 1.65;
-  const punkW       = ts * 1.728;   // normal punk: +20%
+  const punkW       = ts * 1.728;
   const punkH       = ts * 2.376;
-  const punkWScared = ts * 1.872;   // paralysed/scared punk: +30%
+  const punkWScared = ts * 1.872;
   const punkHScared = ts * 2.574;
 
   // Collectible display sizes, centered in tile (overflows okay)
@@ -454,7 +451,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
         {/* Background */}
         <Rect width={size} height={size} fill={BG_COLOR} />
 
-        <G x={ox} y={oy}>
+        <G>
 
           {/* ── MAZE TILES ── */}
           {maze.map((row, ry) =>
@@ -613,21 +610,23 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             // Active skin for this punk based on current level
             const skin = SKIN_SETS[skinSetIdx][punkSlotIndex(punk.color)];
 
+            // Flip matrix: horizontal mirror around punk.pixelX.
+            // Use the matrix[] prop (number array) — avoids react-native-svg string parsing bugs.
+            // Only applied for useFlip=true sprites (original green/blue punks) moving right.
+            const flipMatrix: [number,number,number,number,number,number] | undefined =
+              skin.useFlip && hDir > 0
+                ? [-1, 0, 0, 1, punk.pixelX * 2, 0]
+                : undefined;
+
             // ── "Going home" — eaten punk rushing to spawn: tiny faint sprite ──
             if (punk.goingHome) {
               const ghW = punkW * 0.55;
               const ghH = punkH * 0.55;
-              let ghHref: any;
-              let ghFlip: string | undefined;
-              if (skin.useFlip) {
-                ghHref = skin.leftSrc;
-                ghFlip = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
-              } else {
-                ghHref = hDir > 0 ? skin.rightSrc : skin.leftSrc;
-                ghFlip = undefined;
-              }
+              const ghHref = skin.useFlip
+                ? skin.leftSrc
+                : (hDir > 0 ? skin.rightSrc : skin.leftSrc);
               return (
-                <G key={`punk-${i}`} opacity={0.45} transform={ghFlip}>
+                <G key={`punk-${i}`} opacity={0.45} matrix={flipMatrix}>
                   {/* Speed-trail glow */}
                   <Circle
                     cx={punk.pixelX}
@@ -658,17 +657,11 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
 
             // ── Scared: blink between normal sprite and per-character white ghost ──
             if (isScaredSprite) {
-              let ghostHref: any;
-              let ghostFlip: string | undefined;
-              if (skin.useFlip) {
-                ghostHref = skin.ghostLeftSrc;
-                ghostFlip = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
-              } else {
-                ghostHref = hDir > 0 ? skin.ghostRightSrc : skin.ghostLeftSrc;
-                ghostFlip = undefined;
-              }
+              const ghostHref = skin.useFlip
+                ? skin.ghostLeftSrc
+                : (hDir > 0 ? skin.ghostRightSrc : skin.ghostLeftSrc);
               return (
-                <G key={`punk-${i}`} transform={ghostFlip}>
+                <G key={`punk-${i}`} matrix={flipMatrix}>
                   <Circle
                     cx={punk.pixelX}
                     cy={punk.pixelY}
@@ -691,19 +684,11 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             }
 
             // ── Normal / flash-back-to-normal ──
-            let href: any;
-            let flipT: string | undefined;
-            if (skin.useFlip) {
-              // Original sprites face LEFT — mirror for east-facing
-              href  = skin.leftSrc;
-              flipT = hDir > 0 ? `translate(${punk.pixelX * 2}, 0) scale(-1, 1)` : undefined;
-            } else {
-              // New directional sprites — pick left or right source directly, no transform
-              href  = hDir > 0 ? skin.rightSrc : skin.leftSrc;
-              flipT = undefined;
-            }
+            const href = skin.useFlip
+              ? skin.leftSrc
+              : (hDir > 0 ? skin.rightSrc : skin.leftSrc);
             return (
-              <G key={`punk-${i}`} transform={flipT}>
+              <G key={`punk-${i}`} matrix={flipMatrix}>
                 <SvgImage
                   x={punk.pixelX - pw / 2}
                   y={punk.pixelY - ph * 0.7}
