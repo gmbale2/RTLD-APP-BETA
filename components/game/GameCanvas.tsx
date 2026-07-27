@@ -628,7 +628,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
                 <>
                   <Circle cx={punk.pixelX} cy={punk.pixelY} r={ts * 0.35}
                     fill="rgba(255,68,170,0.18)" stroke="#ff44aa" strokeWidth={0.8} />
-                  <SvgImage x={punk.pixelX - ghW / 2} y={punk.pixelY - ghH * 0.7}
+                  <SvgImage key={String(ghHref)} x={punk.pixelX - ghW / 2} y={punk.pixelY - ghH * 0.7}
                     width={ghW} height={ghH} href={ghHref} preserveAspectRatio="xMidYMid meet" />
                 </>
               );
@@ -653,7 +653,7 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
                 <>
                   <Circle cx={punk.pixelX} cy={punk.pixelY} r={ts * 0.75}
                     fill="rgba(80,120,255,0.15)" stroke="#4466ff" strokeWidth={1} opacity={0.6} />
-                  <SvgImage x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
+                  <SvgImage key={String(ghostHref)} x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
                     width={pw} height={ph} href={ghostHref} preserveAspectRatio="xMidYMid meet" />
                 </>
               );
@@ -669,12 +669,12 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             return needsFlip
               ? (
                 <G key={`punk-${i}`} matrix={flipMat}>
-                  <SvgImage x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
+                  <SvgImage key={String(href)} x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
                     width={pw} height={ph} href={href} preserveAspectRatio="xMidYMid meet" />
                 </G>
               ) : (
                 <G key={`punk-${i}`}>
-                  <SvgImage x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
+                  <SvgImage key={String(href)} x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
                     width={pw} height={ph} href={href} preserveAspectRatio="xMidYMid meet" />
                 </G>
               );
