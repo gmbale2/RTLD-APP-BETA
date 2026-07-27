@@ -657,7 +657,7 @@ function DPad({
   const padTop  = 18;
   const padBot  = 6;
   const avail   = areaHeight - padTop - padBot;
-  const btnH    = Math.max(56, Math.min(76, Math.floor(avail / 2) - 4));
+  const btnH    = Math.round(Math.max(56, Math.min(76, Math.floor(avail / 2) - 4)) * 1.2);
   const btnW    = Math.round(btnH * 1.55);
   const rowGap  = 8;
   const btnGap  = 14;
