@@ -50,12 +50,22 @@ export async function saveUser(
 
   // Persist to Supabase profiles table (authoritative source)
   if (supabase && authId) {
+    // Fetch country from IP (free, no key needed)
+    let country: string | null = null;
+    try {
+      const geo = await fetch("https://ipapi.co/json/");
+      if (geo.ok) {
+        const geoData = await geo.json();
+        country = geoData.country_name ?? null;
+      }
+    } catch {}
     const { error } = await supabase.from("profiles").upsert({
       id:            authId,
       username:      profile.username,
       display_name:  profile.name,
       email:         profile.email,
       email_consent: profile.emailConsent,
+      country,
     });
     if (error) console.warn("[auth] profiles upsert:", error.message);
   }
