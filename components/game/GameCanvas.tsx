@@ -610,13 +610,12 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
             // Active skin for this punk based on current level
             const skin = SKIN_SETS[skinSetIdx][punkSlotIndex(punk.color)];
 
-            // Flip matrix: horizontal mirror around punk.pixelX.
-            // Use the matrix[] prop (number array) — avoids react-native-svg string parsing bugs.
-            // Only applied for useFlip=true sprites (original green/blue punks) moving right.
-            const flipMatrix: [number,number,number,number,number,number] | undefined =
-              skin.useFlip && hDir > 0
-                ? [-1, 0, 0, 1, punk.pixelX * 2, 0]
-                : undefined;
+            // Whether this sprite needs a horizontal flip (useFlip=true sprites moving right).
+            // matrix[] prop used instead of transform string — avoids react-native-svg parse bugs.
+            // When no flip needed the matrix prop is omitted entirely (not set to undefined).
+            const needsFlip = skin.useFlip && hDir > 0;
+            const flipMat: [number,number,number,number,number,number] =
+              [-1, 0, 0, 1, punk.pixelX * 2, 0];
 
             // ── "Going home" — eaten punk rushing to spawn: tiny faint sprite ──
             if (punk.goingHome) {
@@ -625,27 +624,17 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               const ghHref = skin.useFlip
                 ? skin.leftSrc
                 : (hDir > 0 ? skin.rightSrc : skin.leftSrc);
-              return (
-                <G key={`punk-${i}`} opacity={0.45} matrix={flipMatrix}>
-                  {/* Speed-trail glow */}
-                  <Circle
-                    cx={punk.pixelX}
-                    cy={punk.pixelY}
-                    r={ts * 0.35}
-                    fill="rgba(255,68,170,0.18)"
-                    stroke="#ff44aa"
-                    strokeWidth={0.8}
-                  />
-                  <SvgImage
-                    x={punk.pixelX - ghW / 2}
-                    y={punk.pixelY - ghH * 0.7}
-                    width={ghW}
-                    height={ghH}
-                    href={ghHref}
-                    preserveAspectRatio="xMidYMid meet"
-                  />
-                </G>
+              const inner = (
+                <>
+                  <Circle cx={punk.pixelX} cy={punk.pixelY} r={ts * 0.35}
+                    fill="rgba(255,68,170,0.18)" stroke="#ff44aa" strokeWidth={0.8} />
+                  <SvgImage x={punk.pixelX - ghW / 2} y={punk.pixelY - ghH * 0.7}
+                    width={ghW} height={ghH} href={ghHref} preserveAspectRatio="xMidYMid meet" />
+                </>
               );
+              return needsFlip
+                ? <G key={`punk-${i}`} opacity={0.45} matrix={flipMat}>{inner}</G>
+                : <G key={`punk-${i}`} opacity={0.45}>{inner}</G>;
             }
 
             const pw = punkW;
@@ -660,45 +649,35 @@ export const GameCanvas = memo(function GameCanvas({ state, size }: Props) {
               const ghostHref = skin.useFlip
                 ? skin.ghostLeftSrc
                 : (hDir > 0 ? skin.ghostRightSrc : skin.ghostLeftSrc);
-              return (
-                <G key={`punk-${i}`} matrix={flipMatrix}>
-                  <Circle
-                    cx={punk.pixelX}
-                    cy={punk.pixelY}
-                    r={ts * 0.75}
-                    fill="rgba(80,120,255,0.15)"
-                    stroke="#4466ff"
-                    strokeWidth={1}
-                    opacity={0.6}
-                  />
-                  <SvgImage
-                    x={punk.pixelX - pw / 2}
-                    y={punk.pixelY - ph * 0.7}
-                    width={pw}
-                    height={ph}
-                    href={ghostHref}
-                    preserveAspectRatio="xMidYMid meet"
-                  />
-                </G>
+              const inner = (
+                <>
+                  <Circle cx={punk.pixelX} cy={punk.pixelY} r={ts * 0.75}
+                    fill="rgba(80,120,255,0.15)" stroke="#4466ff" strokeWidth={1} opacity={0.6} />
+                  <SvgImage x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
+                    width={pw} height={ph} href={ghostHref} preserveAspectRatio="xMidYMid meet" />
+                </>
               );
+              return needsFlip
+                ? <G key={`punk-${i}`} matrix={flipMat}>{inner}</G>
+                : <G key={`punk-${i}`}>{inner}</G>;
             }
 
             // ── Normal / flash-back-to-normal ──
             const href = skin.useFlip
               ? skin.leftSrc
               : (hDir > 0 ? skin.rightSrc : skin.leftSrc);
-            return (
-              <G key={`punk-${i}`} matrix={flipMatrix}>
-                <SvgImage
-                  x={punk.pixelX - pw / 2}
-                  y={punk.pixelY - ph * 0.7}
-                  width={pw}
-                  height={ph}
-                  href={href}
-                  preserveAspectRatio="xMidYMid meet"
-                />
-              </G>
-            );
+            return needsFlip
+              ? (
+                <G key={`punk-${i}`} matrix={flipMat}>
+                  <SvgImage x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
+                    width={pw} height={ph} href={href} preserveAspectRatio="xMidYMid meet" />
+                </G>
+              ) : (
+                <G key={`punk-${i}`}>
+                  <SvgImage x={punk.pixelX - pw / 2} y={punk.pixelY - ph * 0.7}
+                    width={pw} height={ph} href={href} preserveAspectRatio="xMidYMid meet" />
+                </G>
+              );
           })}
 
           {/* ── BONUS FRUIT ── */}
