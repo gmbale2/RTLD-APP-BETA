@@ -15,11 +15,15 @@ const BORDER_COLOR = "#ffffff";
 
 // ─── Sprite assets ───────────────────────────────────────────────────────────
 const SPR_TARMAN        = require("../../assets/sprites/tarman.png");
-const SPR_PUNK_GREEN    = require("../../assets/sprites/punk_green.png");
-const SPR_PUNK_BLUE     = require("../../assets/sprites/punk_blue.png");
+const SPR_PUNK_GREEN_L  = require("../../assets/sprites/punk_green_l.png");
+const SPR_PUNK_GREEN_R  = require("../../assets/sprites/punk_green_r.png");
+const SPR_PUNK_BLUE_L   = require("../../assets/sprites/punk_blue_l.png");
+const SPR_PUNK_BLUE_R   = require("../../assets/sprites/punk_blue_r.png");
 // Ghost (white silhouette) variants — one per sprite, used during blink frames
-const SPR_GHOST_GREEN        = require("../../assets/sprites/ghost_green.png");
-const SPR_GHOST_BLUE         = require("../../assets/sprites/ghost_blue.png");
+const SPR_GHOST_GREEN_L      = require("../../assets/sprites/ghost_green_l.png");
+const SPR_GHOST_GREEN_R      = require("../../assets/sprites/ghost_green_r.png");
+const SPR_GHOST_BLUE_L       = require("../../assets/sprites/ghost_blue_l.png");
+const SPR_GHOST_BLUE_R       = require("../../assets/sprites/ghost_blue_r.png");
 const SPR_GHOST_ORANGE_L     = require("../../assets/sprites/ghost_orange_l.png");
 const SPR_GHOST_ORANGE_R     = require("../../assets/sprites/ghost_orange_r.png");
 const SPR_GHOST_BLUE2_L      = require("../../assets/sprites/ghost_blue2_l.png");
@@ -65,8 +69,8 @@ type PunkSkin = { leftSrc: any; rightSrc: any; useFlip: boolean; ghostLeftSrc: a
 
 // ── Shorthand skin entries for all 10 characters ─────────────────────────────
 // A–B: original sprites (CSS flip)    C–J: directional sprites (explicit L/R)
-const skA = { leftSrc: SPR_PUNK_GREEN,        rightSrc: SPR_PUNK_GREEN,        useFlip: true,  ghostLeftSrc: SPR_GHOST_GREEN,         ghostRightSrc: SPR_GHOST_GREEN         };
-const skB = { leftSrc: SPR_PUNK_BLUE,         rightSrc: SPR_PUNK_BLUE,         useFlip: true,  ghostLeftSrc: SPR_GHOST_BLUE,          ghostRightSrc: SPR_GHOST_BLUE          };
+const skA = { leftSrc: SPR_PUNK_GREEN_R,      rightSrc: SPR_PUNK_GREEN_L,      useFlip: false, ghostLeftSrc: SPR_GHOST_GREEN_R,       ghostRightSrc: SPR_GHOST_GREEN_L       };
+const skB = { leftSrc: SPR_PUNK_BLUE_R,       rightSrc: SPR_PUNK_BLUE_L,       useFlip: false, ghostLeftSrc: SPR_GHOST_BLUE_R,        ghostRightSrc: SPR_GHOST_BLUE_L        };
 const skC = { leftSrc: SPR_PUNK_ORANGE_R,     rightSrc: SPR_PUNK_ORANGE_L,     useFlip: false, ghostLeftSrc: SPR_GHOST_ORANGE_R,      ghostRightSrc: SPR_GHOST_ORANGE_L      }; // orange
 const skD = { leftSrc: SPR_PUNK_BLUE2_R,      rightSrc: SPR_PUNK_BLUE2_L,      useFlip: false, ghostLeftSrc: SPR_GHOST_BLUE2_R,       ghostRightSrc: SPR_GHOST_BLUE2_L       }; // blue mohawk v2
 const skE = { leftSrc: SPR_PUNK_GREEN2_R,     rightSrc: SPR_PUNK_GREEN2_L,     useFlip: false, ghostLeftSrc: SPR_GHOST_GREEN2_R,      ghostRightSrc: SPR_GHOST_GREEN2_L      }; // green mohawk v2
