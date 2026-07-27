@@ -138,6 +138,11 @@ export default function GameScreen() {
     engineRef.current?.setDirection(dx, dy);
   }, []);
 
+  const handleDPadDirection = useCallback((dx: number, dy: number) => {
+    enableAudio();
+    engineRef.current?.setDirection(dx, dy);
+  }, [enableAudio]);
+
   useEffect(() => {
     // Reset per-game flags so each new game starts fresh
 
@@ -367,7 +372,7 @@ export default function GameScreen() {
       onPanResponderMove: (_, gs) => {
         if (swipeHandled.current) return;
         const dist = Math.sqrt(gs.dx * gs.dx + gs.dy * gs.dy);
-        if (dist < 12) return;
+        if (dist < 8) return;
         swipeHandled.current = true;
         enableAudio();
         if (Math.abs(gs.dx) > Math.abs(gs.dy)) {
@@ -402,7 +407,6 @@ export default function GameScreen() {
   return (
     <View
       style={[styles.root, { paddingTop: topPad, paddingBottom: bottomPad }]}
-      {...panResponder.panHandlers}
     >
       <Text
         style={[
@@ -413,7 +417,7 @@ export default function GameScreen() {
         BRAIN BITE
       </Text>
 
-      <View style={[styles.mazeWrapper, { width: mazeSide, height: mazeSide }]}>
+      <View style={[styles.mazeWrapper, { width: mazeSide, height: mazeSide }]} {...panResponder.panHandlers}>
         <CemeteryBorder size={mazeSide} borderSize={0} />
         <GameCanvas state={gameState} size={gameSide} />
         {showOverlay && (
@@ -484,12 +488,21 @@ export default function GameScreen() {
         onPause={handlePause}
       />
 
-      {/* Film logo + hub CTA — fills all remaining black space below HUD */}
-      <FilmLogo
-        containerWidth={mazeSide}
-        areaHeight={logoAreaHeight}
-        onHubPress={() => router.push("/hub")}
-      />
+      {/* D-pad on native; film logo on web */}
+      {Platform.OS === "web" ? (
+        <FilmLogo
+          containerWidth={mazeSide}
+          areaHeight={logoAreaHeight}
+          onHubPress={() => router.push("/hub")}
+        />
+      ) : (
+        <DPad
+          containerWidth={mazeSide}
+          areaHeight={logoAreaHeight}
+          onHubPress={() => router.push("/hub")}
+          onDirection={handleDPadDirection}
+        />
+      )}
 
       {/* ── Offline banner ─────────────────────────────────────────────── */}
       {!isOnline && !navPaused && (
@@ -549,6 +562,105 @@ function FilmLogo({
     </View>
   );
 }
+
+// ── D-pad component (native only) ───────────────────────────────────────────
+
+function DPad({
+  containerWidth,
+  areaHeight,
+  onHubPress,
+  onDirection,
+}: {
+  containerWidth: number;
+  areaHeight: number;
+  onHubPress: () => void;
+  onDirection: (dx: number, dy: number) => void;
+}) {
+  const hubH   = 44;
+  const padV   = 10;
+  const avail  = areaHeight - hubH - padV * 2;
+  const btnSize = Math.max(36, Math.min(54, Math.floor(avail / 3) - 4));
+  const gap    = 4;
+
+  const Btn = ({
+    dx, dy, icon,
+  }: { dx: number; dy: number; icon: string }) => (
+    <Pressable
+      style={({ pressed }) => [
+        dpadStyles.btn,
+        { width: btnSize, height: btnSize },
+        pressed && dpadStyles.btnPressed,
+      ]}
+      onPressIn={() => onDirection(dx, dy)}
+      hitSlop={4}
+    >
+      <FontAwesome5 name={icon} size={Math.round(btnSize * 0.36)} color="#cc00ff" />
+    </Pressable>
+  );
+
+  return (
+    <View style={[styles.logoArea, { width: containerWidth, height: areaHeight }]}>
+      {/* Cross layout */}
+      <View style={[dpadStyles.cross, { gap }]}>
+        {/* Row 1 — Up */}
+        <View style={[dpadStyles.row, { gap }]}>
+          <View style={{ width: btnSize, height: btnSize }} />
+          <Btn dx={0} dy={-1} icon="chevron-up" />
+          <View style={{ width: btnSize, height: btnSize }} />
+        </View>
+        {/* Row 2 — Left / Center / Right */}
+        <View style={[dpadStyles.row, { gap }]}>
+          <Btn dx={-1} dy={0} icon="chevron-left" />
+          <View style={[dpadStyles.center, { width: btnSize, height: btnSize }]}>
+            <FontAwesome5 name="skull" size={Math.round(btnSize * 0.36)} color="#2a0044" />
+          </View>
+          <Btn dx={1} dy={0} icon="chevron-right" />
+        </View>
+        {/* Row 3 — Down */}
+        <View style={[dpadStyles.row, { gap }]}>
+          <View style={{ width: btnSize, height: btnSize }} />
+          <Btn dx={0} dy={1} icon="chevron-down" />
+          <View style={{ width: btnSize, height: btnSize }} />
+        </View>
+      </View>
+
+      {/* Hub button */}
+      <Pressable
+        style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.75 }]}
+        onPress={onHubPress}
+      >
+        <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
+        <Text style={styles.hubBtnText}>EXPLORE MORE →</Text>
+        <FontAwesome5 name="chevron-right" size={10} color="#0a0012" />
+      </Pressable>
+    </View>
+  );
+}
+
+const dpadStyles = StyleSheet.create({
+  cross:      { flexDirection: "column", alignItems: "center" },
+  row:        { flexDirection: "row" },
+  btn: {
+    backgroundColor: "rgba(80,0,120,0.55)",
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#550077",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnPressed: {
+    backgroundColor: "rgba(160,0,240,0.85)",
+    borderColor: "#cc00ff",
+  },
+  center: {
+    backgroundColor: "rgba(15,0,25,0.8)",
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#220033",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 

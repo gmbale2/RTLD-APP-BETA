@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   TextStyle,
   Linking,
   ActivityIndicator,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
@@ -22,21 +24,46 @@ const ACCENT_DIM   = "#330066";
 const ACCENT_DARK  = "#0e0018";
 const BG           = "#0a0014";
 
-// Shopify collection handle for "New Movie Opportunities"
 const COLLECTION_HANDLE = "new-movie-opportunities";
-const SHOPIFY_COLLECTION_URL = "https://returnofthelivingdead.com/collections/new-movie-opportunities";
+const PAGE_SIZE = 20;
 
 export default function FilmOppsScreen() {
   const insets = useSafeAreaInsets();
-  const [products, setProducts] = useState<ShopifyProduct[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [products, setProducts]       = useState<ShopifyProduct[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const cursorRef   = useRef<string | null>(null);
+  const hasMoreRef  = useRef(true);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
-    fetchCollectionProducts(COLLECTION_HANDLE).then((p) => {
-      setProducts(p.products);
+    fetchCollectionProducts(COLLECTION_HANDLE, PAGE_SIZE).then((page) => {
+      setProducts(page.products);
+      cursorRef.current  = page.endCursor;
+      hasMoreRef.current = page.hasNextPage;
       setLoading(false);
     });
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (fetchingRef.current || !hasMoreRef.current) return;
+    fetchingRef.current = true;
+    setLoadingMore(true);
+    const page = await fetchCollectionProducts(COLLECTION_HANDLE, PAGE_SIZE, cursorRef.current ?? undefined);
+    setProducts((prev) => [...prev, ...page.products]);
+    cursorRef.current  = page.endCursor;
+    hasMoreRef.current = page.hasNextPage;
+    fetchingRef.current = false;
+    setLoadingMore(false);
+  }, []);
+
+  const onScroll = useCallback(
+    ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+      if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 200) loadMore();
+    },
+    [loadMore],
+  );
 
   const openURL = (url: string) => Linking.openURL(url).catch(() => {});
 
@@ -62,6 +89,8 @@ export default function FilmOppsScreen() {
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.grid}
+        onScroll={onScroll}
+        scrollEventThrottle={200}
       >
         {loading ? (
           <View style={styles.loadingWrap}>
@@ -110,14 +139,10 @@ export default function FilmOppsScreen() {
           ))
         )}
 
-        {!loading && products.length > 0 && (
-          <Pressable
-            style={({ pressed }) => [styles.browseAllBtn, pressed && { opacity: 0.75 }]}
-            onPress={() => openURL(SHOPIFY_COLLECTION_URL)}
-          >
-            <FontAwesome5 name="film" size={13} color={ACCENT_DARK} solid />
-            <Text style={styles.browseAllText}>BROWSE ALL</Text>
-          </Pressable>
+        {loadingMore && (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator color={ACCENT} size="small" />
+          </View>
         )}
       </ScrollView>
 
@@ -223,11 +248,4 @@ const styles = StyleSheet.create({
   },
   viewBtnText: { color: ACCENT_DARK, fontSize: 9, fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
 
-  browseAllBtn: {
-    width: "100%", maxWidth: 440, marginTop: 4,
-    paddingVertical: 13, backgroundColor: ACCENT,
-    borderRadius: 4, flexDirection: "row",
-    alignItems: "center", justifyContent: "center", gap: 8,
-  },
-  browseAllText: { color: ACCENT_DARK, fontSize: 12, fontFamily: "Inter_700Bold", letterSpacing: 2 },
 });

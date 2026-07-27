@@ -17,11 +17,12 @@ interface Props {
 }
 
 const STEPS = [
-  { icon: "skull",    color: "#cc00ff", title: "YOU ARE TARMAN",  body: "Eat brains scattered across the cemetery. Collect them all to advance." },
-  { icon: "bolt",     color: "#39ff14", title: "POWER CANS",      body: "Grab glowing green cans to go POWERED UP — punks become scared and edible!" },
-  { icon: "running",  color: "#ff2200", title: "AVOID PUNKS",     body: "Punks hunt you down. Touch one while unpowered and you lose a life." },
-  { icon: "apple-alt",color: "#FFD700", title: "BONUS ITEMS",     body: "Fruit & bonus items appear mid-level. Eat them fast for massive points!" },
-  { icon: "clock",    color: "#00aaff", title: "BEAT THE CLOCK",  body: "Finish each level quickly for a time bonus — the faster, the better." },
+  { icon: "skull",         color: "#cc00ff", title: "YOU ARE TARMAN",     body: "Eat brains scattered across the cemetery. Collect them all to advance." },
+  { icon: "bolt",          color: "#39ff14", title: "POWER BARRELS",      body: "Grab glowing green barrels to go POWERED UP — punks become scared and edible!" },
+  { icon: "running",       color: "#ff2200", title: "AVOID PUNKS",        body: "Punks hunt you down. Touch one while unpowered and you lose a life." },
+  { icon: "apple-alt",     color: "#FFD700", title: "BONUS ITEMS",        body: "Fruit & bonus items appear mid-level. Eat them fast for massive points!" },
+  { icon: "clock",         color: "#00aaff", title: "BEAT THE CLOCK",     body: "Finish each level quickly for a time bonus — the faster, the better." },
+  { icon: "level-up-alt",  color: "#ff6600", title: "LEVELS GET HARDER",  body: "Each level punks move faster, hunt smarter, and power-up time gets shorter. Stay sharp!" },
 ];
 
 export default function HowToPlayModal({ visible, onClose }: Props) {
@@ -64,7 +65,7 @@ export default function HowToPlayModal({ visible, onClose }: Props) {
             <View style={styles.controlsBox}>
               <Text style={styles.controlsTitle}>CONTROLS</Text>
               <Text style={styles.controlsBody}>
-                📱 Mobile: Swipe in any direction{"\n"}
+                📱 Mobile: Swipe or use the D-pad{"\n"}
                 🖥️ Desktop: Arrow keys or WASD
               </Text>
             </View>
