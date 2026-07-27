@@ -99,9 +99,9 @@ export function useSoundPlayer() {
       ambientRef.current?.playAsync().catch(() => {});
     } else if (mode === "power") {
       ambientRef.current?.pauseAsync().catch(() => {});
-      powerThemeRef.current?.setPositionAsync(0).then(() =>
-        powerThemeRef.current?.playAsync()
-      ).catch(() => {});
+      powerThemeRef.current?.stopAsync()
+        .then(() => powerThemeRef.current?.playAsync())
+        .catch(() => {});
     }
   }, []);
 
