@@ -565,21 +565,21 @@ function FilmLogo({
 // ── D-pad button — defined at MODULE SCOPE so React never remounts it mid-gesture ──
 
 function DPadBtn({
-  dx, dy, icon, size, iconSz, onDirection,
+  dx, dy, icon, btnW, btnH, iconSz, onDirection,
 }: {
   dx: number; dy: number; icon: string;
-  size: number; iconSz: number;
+  btnW: number; btnH: number; iconSz: number;
   onDirection: (dx: number, dy: number) => void;
 }) {
   const [isPressed, setIsPressed] = React.useState(false);
   return (
     <View
-      style={[dpadStyles.btn, { width: size, height: size }, isPressed && dpadStyles.btnPressed]}
+      style={[dpadStyles.btn, { width: btnW, height: btnH }, isPressed && dpadStyles.btnPressed]}
       onStartShouldSetResponder={() => true}
       onResponderGrant={() => { onDirection(dx, dy); setIsPressed(true); }}
       onResponderRelease={() => setIsPressed(false)}
       onResponderTerminate={() => setIsPressed(false)}
-      hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
     </View>
@@ -602,10 +602,11 @@ function DPad({
   const padTop  = 18;
   const padBot  = 6;
   const avail   = areaHeight - padTop - padBot;
-  const btnSize = Math.max(62, Math.min(90, Math.floor(avail / 2) - 4));
-  const rowGap  = 8;   // gap between the two rows
-  const btnGap  = 12;  // gap between buttons in the lower row
-  const iconSz  = Math.round(btnSize * 0.44);
+  const btnH    = Math.max(56, Math.min(76, Math.floor(avail / 2) - 4));
+  const btnW    = Math.round(btnH * 1.55);   // rectangular — wider than tall
+  const rowGap  = 8;
+  const btnGap  = 14;
+  const iconSz  = Math.round(btnH * 0.44);
 
   return (
     <View
@@ -615,23 +616,25 @@ function DPad({
       ]}
     >
       <View style={{ flexDirection: "column", gap: rowGap, alignItems: "flex-start" }}>
-        {/* Row 1: spacer (keeps Up centered above Down) | Up | SEE MORE */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <View style={{ width: btnSize }} />
-          <DPadBtn dx={0} dy={-1} icon="chevron-up" size={btnSize} iconSz={iconSz} onDirection={onDirection} />
+        {/* Row 1: spacer | Up | flex push | SEE MORE flush to screen edge */}
+        <View style={{ flexDirection: "row", alignItems: "center", width: containerWidth - 8 }}>
+          <View style={{ width: btnW }} />
+          <View style={{ width: btnGap }} />
+          <DPadBtn dx={0} dy={-1} icon="chevron-up" btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
+          <View style={{ flex: 1 }} />
           <Pressable
-            style={({ pressed }) => [dpadStyles.seeMoreBtn, { height: btnSize, marginLeft: 18 }, pressed && { opacity: 0.75 }]}
+            style={({ pressed }) => [dpadStyles.seeMoreBtn, { height: btnH }, pressed && { opacity: 0.75 }]}
             onPress={onHubPress}
           >
             <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
             <Text style={dpadStyles.seeMoreText}>SEE MORE</Text>
           </Pressable>
         </View>
-        {/* Row 2: Left / Down / Right — wider gaps */}
+        {/* Row 2: Left / Down / Right */}
         <View style={{ flexDirection: "row", gap: btnGap }}>
-          <DPadBtn dx={-1} dy={0} icon="chevron-left"  size={btnSize} iconSz={iconSz} onDirection={onDirection} />
-          <DPadBtn dx={0}  dy={1} icon="chevron-down"  size={btnSize} iconSz={iconSz} onDirection={onDirection} />
-          <DPadBtn dx={1}  dy={0} icon="chevron-right" size={btnSize} iconSz={iconSz} onDirection={onDirection} />
+          <DPadBtn dx={-1} dy={0} icon="chevron-left"  btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
+          <DPadBtn dx={0}  dy={1} icon="chevron-down"  btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
+          <DPadBtn dx={1}  dy={0} icon="chevron-right" btnW={btnW} btnH={btnH} iconSz={iconSz} onDirection={onDirection} />
         </View>
       </View>
     </View>
