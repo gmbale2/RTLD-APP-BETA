@@ -16,20 +16,25 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 
-interface VimeoVideo {
+import { supabase } from "@/utils/supabase";
+
+interface ContentPost {
   id: string;
   title: string;
+  vimeo_url: string | null;
+  published_at: string;
 }
 
 interface VimeoMeta {
-  title: string;
   thumbnailUrl: string;
   duration: number;
 }
 
-const VIDEOS: VimeoVideo[] = [
-  { id: "1206484012", title: "RETURN OF THE LIVING DEAD" },
-];
+function extractVimeoId(url: string | null): string | null {
+  if (!url) return null;
+  const m = url.match(/vimeo\.com\/(\d+)/);
+  return m ? m[1] : null;
+}
 
 async function fetchVimeoMeta(id: string): Promise<VimeoMeta | null> {
   try {
@@ -39,7 +44,6 @@ async function fetchVimeoMeta(id: string): Promise<VimeoMeta | null> {
     if (!res.ok) return null;
     const data = await res.json();
     return {
-      title: data.title ?? "",
       thumbnailUrl: data.thumbnail_url ?? "",
       duration: data.duration ?? 0,
     };
@@ -96,9 +100,8 @@ function VimeoModal({ videoId, onClose }: VimeoModalProps) {
               title="Vimeo Player"
             />
           ) : (
-            // React Native WebView — the host app must have react-native-webview installed
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
             (() => {
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
               const { WebView } = require("react-native-webview");
               return (
                 <WebView
@@ -119,19 +122,35 @@ function VimeoModal({ videoId, onClose }: VimeoModalProps) {
 
 export default function ExclusiveScreen() {
   const insets = useSafeAreaInsets();
-  const [metas, setMetas] = useState<Record<string, VimeoMeta | null>>({});
+  const [posts, setPosts]       = useState<ContentPost[]>([]);
+  const [metas, setMetas]       = useState<Record<string, VimeoMeta | null>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
-  const loadedRef = useRef(false);
+  const [loading, setLoading]   = useState(true);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-    Promise.all(
-      VIDEOS.map(async (v) => {
-        const meta = await fetchVimeoMeta(v.id);
-        setMetas((prev) => ({ ...prev, [v.id]: meta }));
-      })
-    );
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    if (!supabase) { setLoading(false); return; }
+
+    supabase
+      .from("content_posts")
+      .select("id, title, vimeo_url, published_at")
+      .eq("section", "movie_updates")
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .then(({ data }) => {
+        const rows = (data ?? []) as ContentPost[];
+        setPosts(rows);
+        setLoading(false);
+        rows.forEach((post) => {
+          const vid = extractVimeoId(post.vimeo_url);
+          if (!vid) return;
+          fetchVimeoMeta(vid).then((meta) =>
+            setMetas((prev) => ({ ...prev, [vid]: meta }))
+          );
+        });
+      });
   }, []);
 
   return (
@@ -150,57 +169,72 @@ export default function ExclusiveScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.videoList}
       >
-        {VIDEOS.map((video) => {
-          const meta = metas[video.id];
-          const loaded = video.id in metas;
+        {loading ? (
+          <View style={styles.centerState}>
+            <ActivityIndicator color="#ff2222" size="large" />
+            <Text style={styles.stateText}>LOADING…</Text>
+          </View>
+        ) : posts.length === 0 ? (
+          <View style={styles.centerState}>
+            <Text style={styles.emptyEmoji}>📭</Text>
+            <Text style={styles.stateText}>NO CONTENT YET</Text>
+          </View>
+        ) : (
+          posts.map((post) => {
+            const vid        = extractVimeoId(post.vimeo_url);
+            const meta       = vid ? metas[vid] : null;
+            const metaLoaded = vid ? vid in metas : true;
 
-          return (
-            <Pressable
-              key={video.id}
-              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-              onPress={() => { if (meta) setActiveId(video.id); }}
-            >
-              <View style={styles.thumbArea}>
-                {!loaded ? (
-                  <View style={styles.thumbPlaceholder}>
-                    <ActivityIndicator color="#ff2222" />
-                  </View>
-                ) : meta?.thumbnailUrl ? (
-                  <>
-                    <ExpoImage
-                      source={{ uri: meta.thumbnailUrl }}
-                      contentFit="cover"
-                      style={StyleSheet.absoluteFillObject}
-                    />
-                    <View style={styles.thumbOverlay} />
-                  </>
-                ) : (
-                  <View style={styles.thumbPlaceholder} />
-                )}
+            return (
+              <Pressable
+                key={post.id}
+                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                onPress={() => { if (vid) setActiveId(vid); }}
+              >
+                <View style={styles.thumbArea}>
+                  {!metaLoaded ? (
+                    <View style={styles.thumbPlaceholder}>
+                      <ActivityIndicator color="#ff2222" />
+                    </View>
+                  ) : meta?.thumbnailUrl ? (
+                    <>
+                      <ExpoImage
+                        source={{ uri: meta.thumbnailUrl }}
+                        contentFit="cover"
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                      <View style={styles.thumbOverlay} />
+                    </>
+                  ) : (
+                    <View style={styles.thumbPlaceholder} />
+                  )}
 
-                {(!loaded || meta) && (
-                  <View style={styles.playBtn}>
-                    <FontAwesome5 name="play-circle" size={48} color="rgba(255,255,255,0.92)" solid />
-                  </View>
-                )}
+                  {vid && (
+                    <View style={styles.playBtn}>
+                      <FontAwesome5 name="play-circle" size={48} color="rgba(255,255,255,0.92)" solid />
+                    </View>
+                  )}
 
-                {meta && meta.duration > 0 && (
-                  <View style={styles.durationBadge}>
-                    <Text style={styles.durationText}>{formatDuration(meta.duration)}</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.cardBody}>
-                <Text style={styles.videoTitle}>{meta?.title || video.title}</Text>
-                <View style={styles.watchRow}>
-                  <Text style={styles.watchText}>WATCH NOW</Text>
-                  <FontAwesome5 name="play" size={8} color="#ff2222" />
+                  {meta && meta.duration > 0 && (
+                    <View style={styles.durationBadge}>
+                      <Text style={styles.durationText}>{formatDuration(meta.duration)}</Text>
+                    </View>
+                  )}
                 </View>
-              </View>
-            </Pressable>
-          );
-        })}
+
+                <View style={styles.cardBody}>
+                  <Text style={styles.videoTitle}>{post.title}</Text>
+                  {vid && (
+                    <View style={styles.watchRow}>
+                      <Text style={styles.watchText}>WATCH NOW</Text>
+                      <FontAwesome5 name="play" size={8} color="#ff2222" />
+                    </View>
+                  )}
+                </View>
+              </Pressable>
+            );
+          })
+        )}
 
         <View style={{ height: 8 }} />
       </ScrollView>
@@ -235,6 +269,9 @@ const styles = StyleSheet.create({
   pageSubtitle:{ fontSize: 9, color: "#550000", fontFamily: "Inter_700Bold", letterSpacing: 3, marginBottom: 16 },
   scroll:      { flex: 1, width: "100%" },
   videoList:   { gap: 16, maxWidth: 440, alignSelf: "center", width: "100%", paddingBottom: 8 },
+  centerState: { alignItems: "center", paddingVertical: 48, gap: 12 },
+  emptyEmoji:  { fontSize: 36 },
+  stateText:   { fontSize: 10, color: "#ff4444", fontFamily: "Inter_700Bold", letterSpacing: 1 },
   card:        { width: "100%", backgroundColor: "rgba(20,0,30,0.9)", borderWidth: 1.5, borderColor: "#2a0022", borderRadius: 12, overflow: "hidden" },
   cardPressed: { opacity: 0.75 },
   thumbArea:   { width: "100%", aspectRatio: 16 / 9, backgroundColor: "#120012", overflow: "hidden" },
