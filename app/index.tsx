@@ -372,7 +372,7 @@ export default function GameScreen() {
       onPanResponderMove: (_, gs) => {
         if (swipeHandled.current) return;
         const dist = Math.sqrt(gs.dx * gs.dx + gs.dy * gs.dy);
-        if (dist < 6) return;
+        if (dist < 4) return;
         swipeHandled.current = true;
         enableAudio();
         if (Math.abs(gs.dx) > Math.abs(gs.dy)) {
@@ -579,7 +579,7 @@ function DPad({
   const padV    = 8;
   const avail   = areaHeight - hubH - padV * 2;
   // 2 rows now — more space per button
-  const btnSize = Math.max(50, Math.min(72, Math.floor(avail / 2) - 6));
+  const btnSize = Math.max(56, Math.min(82, Math.floor(avail / 2) - 2));
   const gap     = 6;
   const iconSz  = Math.round(btnSize * 0.42);
 
@@ -645,11 +645,11 @@ const dpadStyles = StyleSheet.create({
   seeMoreBtn: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
+    alignSelf: "flex-end",
     gap: 5,
     paddingVertical: 7,
     paddingHorizontal: 12,
-    marginLeft: 4,
+    marginRight: 4,
     backgroundColor: "#cc00ff",
     borderRadius: 6,
   },
