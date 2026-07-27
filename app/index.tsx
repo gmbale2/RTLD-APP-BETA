@@ -562,6 +562,30 @@ function FilmLogo({
   );
 }
 
+// ── D-pad button — defined at MODULE SCOPE so React never remounts it mid-gesture ──
+
+function DPadBtn({
+  dx, dy, icon, size, iconSz, onDirection,
+}: {
+  dx: number; dy: number; icon: string;
+  size: number; iconSz: number;
+  onDirection: (dx: number, dy: number) => void;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        dpadStyles.btn,
+        { width: size, height: size },
+        pressed && dpadStyles.btnPressed,
+      ]}
+      onPressIn={() => onDirection(dx, dy)}
+      hitSlop={14}
+    >
+      <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
+    </Pressable>
+  );
+}
+
 // ── D-pad component (native only) ───────────────────────────────────────────
 
 function DPad({
@@ -575,63 +599,46 @@ function DPad({
   onHubPress: () => void;
   onDirection: (dx: number, dy: number) => void;
 }) {
-  const hubH    = 30;
-  const padV    = 8;
-  const avail   = areaHeight - hubH - padV * 2;
-  // 2 rows now — more space per button
-  const btnSize = Math.max(56, Math.min(82, Math.floor(avail / 2) - 2));
-  const gap     = 6;
-  const iconSz  = Math.round(btnSize * 0.42);
-
-  const Btn = ({
-    dx, dy, icon,
-  }: { dx: number; dy: number; icon: string }) => {
-    const [isPressed, setIsPressed] = React.useState(false);
-    return (
-      <View
-        style={[dpadStyles.btn, { width: btnSize, height: btnSize }, isPressed && dpadStyles.btnPressed]}
-        onStartShouldSetResponder={() => true}
-        onResponderGrant={() => { onDirection(dx, dy); setIsPressed(true); }}
-        onResponderRelease={() => setIsPressed(false)}
-        onResponderTerminate={() => setIsPressed(false)}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <FontAwesome5 name={icon} size={iconSz} color="#cc00ff" />
-      </View>
-    );
-  };
+  const padTop  = 18;
+  const padBot  = 6;
+  const avail   = areaHeight - padTop - padBot;
+  const btnSize = Math.max(62, Math.min(90, Math.floor(avail / 2) - 4));
+  const rowGap  = 8;   // gap between the two rows
+  const btnGap  = 12;  // gap between buttons in the lower row
+  const iconSz  = Math.round(btnSize * 0.44);
 
   return (
-    <View style={[styles.logoArea, { width: containerWidth, height: areaHeight, paddingTop: padV }]}>
-      {/* Arrow-key layout: Up on top, Left/Down/Right below */}
-      <View style={[dpadStyles.cross, { gap }]}>
-        {/* Row 1 — Up (centered above Down) */}
-        <View style={dpadStyles.row}>
-          <Btn dx={0} dy={-1} icon="chevron-up" />
+    <View
+      style={[
+        styles.logoArea,
+        { width: containerWidth, height: areaHeight, justifyContent: "flex-start", paddingTop: padTop },
+      ]}
+    >
+      <View style={{ flexDirection: "column", gap: rowGap, alignItems: "flex-start" }}>
+        {/* Row 1: spacer (keeps Up centered above Down) | Up | SEE MORE */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <View style={{ width: btnSize }} />
+          <DPadBtn dx={0} dy={-1} icon="chevron-up" size={btnSize} iconSz={iconSz} onDirection={onDirection} />
+          <Pressable
+            style={({ pressed }) => [dpadStyles.seeMoreBtn, { height: btnSize }, pressed && { opacity: 0.75 }]}
+            onPress={onHubPress}
+          >
+            <FontAwesome5 name="th-large" size={11} color="#0a0012" solid />
+            <Text style={dpadStyles.seeMoreText}>SEE MORE</Text>
+          </Pressable>
         </View>
-        {/* Row 2 — Left / Down / Right */}
-        <View style={[dpadStyles.row, { gap }]}>
-          <Btn dx={-1} dy={0} icon="chevron-left" />
-          <Btn dx={0}  dy={1} icon="chevron-down" />
-          <Btn dx={1}  dy={0} icon="chevron-right" />
+        {/* Row 2: Left / Down / Right — wider gaps */}
+        <View style={{ flexDirection: "row", gap: btnGap }}>
+          <DPadBtn dx={-1} dy={0} icon="chevron-left"  size={btnSize} iconSz={iconSz} onDirection={onDirection} />
+          <DPadBtn dx={0}  dy={1} icon="chevron-down"  size={btnSize} iconSz={iconSz} onDirection={onDirection} />
+          <DPadBtn dx={1}  dy={0} icon="chevron-right" size={btnSize} iconSz={iconSz} onDirection={onDirection} />
         </View>
       </View>
-
-      {/* Hub button — compact, left-aligned */}
-      <Pressable
-        style={({ pressed }) => [dpadStyles.seeMoreBtn, pressed && { opacity: 0.75 }]}
-        onPress={onHubPress}
-      >
-        <FontAwesome5 name="th-large" size={8} color="#0a0012" solid />
-        <Text style={dpadStyles.seeMoreText}>SEE MORE</Text>
-      </Pressable>
     </View>
   );
 }
 
 const dpadStyles = StyleSheet.create({
-  cross:  { flexDirection: "column", alignItems: "center" },
-  row:    { flexDirection: "row" },
   btn: {
     backgroundColor: "rgba(80,0,120,0.55)",
     borderRadius: 10,
@@ -645,18 +652,16 @@ const dpadStyles = StyleSheet.create({
     borderColor: "#cc00ff",
   },
   seeMoreBtn: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
-    alignSelf: "flex-end",
+    justifyContent: "center",
     gap: 5,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    marginRight: 4,
+    paddingHorizontal: 14,
     backgroundColor: "#cc00ff",
-    borderRadius: 6,
+    borderRadius: 10,
   },
   seeMoreText: {
-    fontSize: 9,
+    fontSize: 10,
     color: "#0a0012",
     fontFamily: "Inter_700Bold",
     letterSpacing: 1.5,
