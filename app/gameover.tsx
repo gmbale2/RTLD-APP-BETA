@@ -144,7 +144,7 @@ async function captureAndShareImage(viewRef: React.RefObject<View>): Promise<voi
 
 // ── Share Card ────────────────────────────────────────────────────────────────
 
-const SHARE_CARD_BG = require("../assets/images/share_card_bg.png");
+const SHARE_CARD_BG = require("../assets/images/share_card_bg.jpg");
 
 interface ShareCardProps {
   score: number;

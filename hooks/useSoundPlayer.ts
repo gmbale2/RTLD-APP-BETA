@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef } from "react";
 import { Audio } from "expo-av";
 import { loadSoundSettings, getSoundSettingsSync } from "@/utils/soundSettings";
 
-const AMBIENT_SRC     = require("../assets/sounds/ambient.wav");
-const POWER_THEME_SRC = require("../assets/sounds/power_theme.wav");
+const AMBIENT_SRC     = require("../assets/sounds/ambient_new.m4a");
+const POWER_THEME_SRC = require("../assets/sounds/power_theme_new.m4a");
 const BRAINS_SRC      = require("../assets/sounds/brains_sfx.m4a");
 const PARAMEDICS_SRC  = require("../assets/sounds/paramedics_sfx.m4a");
 
