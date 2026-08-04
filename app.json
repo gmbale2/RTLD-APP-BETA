@@ -40,7 +40,7 @@
       }
     },
     "owner": "gmbale2",
-    "privacy": "unlisted",
+    "privacy": "public",
     "runtimeVersion": {
       "policy": "appVersion"
     },
